@@ -85,6 +85,7 @@ add_subdirectory(3rdParty/nodeeditor)
 add_subdirectory(src/common)
 add_subdirectory(src/gui)
 add_subdirectory(src/components)
+add_subdirectory(tools)
 
 
 if(WITH_TESTS OR WITH_COVERAGE)

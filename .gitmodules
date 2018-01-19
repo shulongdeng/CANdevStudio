@@ -13,3 +13,6 @@
 [submodule "3rdParty/qtCannelloniCanBus"]
 	path = 3rdParty/qtCannelloniCanBus
 	url = https://github.com/tuvok/qtCannelloniCanBus.git
+[submodule "3rdParty/cxxopts"]
+	path = 3rdParty/cxxopts
+	url = https://github.com/jarro2783/cxxopts.git
