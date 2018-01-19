@@ -4,46 +4,53 @@
 namespace {
 
 struct FuncDefAdder {
-    FuncDefAdder(const std::string& className, const std::string& base = "")
+    FuncDefAdder(const std::string& className, const std::string& base = "") 
+        : _className(className)
     {
         using namespace fmt::literals;
 
-        _buff += fmt::format("class {name}{base} {{\n",
-                "name"_a = className,
-                "base"_a = base.length() ? fmt::format(" : {}", base) : "");
+        _hdrBuff += fmt::format("class {name}{base} {{\n", "name"_a = className,
+            "base"_a = base.length() ? fmt::format(" : {}", base) : "");
     }
-    
+
     FuncDefAdder& privateSection()
     {
-        _buff += "private:\n";
+        _hdrBuff += "private:\n";
 
         return *this;
     }
 
     FuncDefAdder& signalsSection()
     {
-        _buff += "signals:\n";
+        _hdrBuff += "signals:\n";
 
         return *this;
     }
 
     FuncDefAdder& slotsSection()
     {
-        _buff += "slots:\n";
+        _hdrBuff += "public slots:\n";
 
         return *this;
     }
 
     FuncDefAdder& publicSection()
     {
-        _buff += "public:\n";
+        _hdrBuff += "public:\n";
+
+        return *this;
+    }
+
+    FuncDefAdder& newLine()
+    {
+        _hdrBuff += "\n";
 
         return *this;
     }
 
     FuncDefAdder& operator()(const std::string& line)
     {
-        _buff += line;
+        _hdrBuff += line + "\n";
 
         return *this;
     }
@@ -52,10 +59,7 @@ struct FuncDefAdder {
     {
         using namespace fmt::literals;
 
-        _buff += fmt::format("{indent} {type} {name};\n", 
-                "indent"_a = "    ",
-                "type"_a = type,
-                "name"_a = name);
+        _hdrBuff += fmt::format("{indent}{type} {name};\n", "indent"_a = "    ", "type"_a = type, "name"_a = name);
 
         return *this;
     }
@@ -66,7 +70,7 @@ struct FuncDefAdder {
         using namespace fmt::literals;
 
         // clang-format off
-        _buff += fmt::format("{indent}{ret} {name}({args}){override}{const};\n", 
+        _hdrBuff += fmt::format("{indent}{ret} {name}({args}){override}{const};\n", 
                 "ret"_a = ret,
                 "name"_a = name,
                 "args"_a = args,
@@ -75,23 +79,108 @@ struct FuncDefAdder {
                 "indent"_a = "    ");
         // clang-format on
 
+        _srcBuff += fmt::format(R"(
+{ret} {className}::{funcName}({args}){const}
+{{
+    return{retVal};
+}}
+)",
+                "ret"_a = ret,
+                "funcName"_a = name,
+                "className"_a = _className,
+                "args"_a = args,
+                "const"_a = constant ? " const" : "",
+                "retVal"_a = ret == "void"? "" : "{}");
+
         return *this;
     }
 
-    std::string get()
+    std::string getSrc()
     {
-        if(!_finished) {
-            _buff += "};\n";
+        return _srcBuff;
+    }
+
+    std::string getHdr()
+    {
+        if (!_finished) {
+            _hdrBuff += "};\n";
             _finished = true;
         }
 
-        return _buff;
+        return _hdrBuff;
     }
 
 private:
-    std::string _buff;
+    std::string _srcBuff;
+    std::string _hdrBuff;
+    std::string _className;
     bool _finished{ false };
 };
+
+std::string str_toupper(std::string s)
+{
+    std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return std::toupper(c); });
+    return s;
+}
+
+std::pair<std::string, std::string>  genComponentImpl(const std::string& componentName)
+{
+    std::string srcBuff;
+    std::string hdrBuff;
+    auto componentNameUpper = str_toupper(componentName);
+
+    // clang-format off
+    FuncDefAdder classDesc(componentName, "public QObject, public ComponentInterfac");
+
+    classDesc
+        ("    Q_OBJECT")
+        ("    Q_DECLARE_PRIVATE(" + componentNameUpper + ")")
+        .newLine()
+        .publicSection()
+        ("    " + componentName + "();")
+        ("    explicit " + componentName + "(CanRawViewCtx&& ctx);")
+        ("    ~" + componentName + "();")
+        .newLine()
+        ("mainWidget", "QWidget*", "", true)
+        ("setConfig", "void", "const QJsonObject& json", true)
+        ("setConfig", "void", "const QObject& qobject", true)
+        ("getConfig", "QJsonObject", "", true, true)
+        ("getQConfig", "std::shared_ptr<QObject>", "", true, true)
+        ("configChanged", "void", "", true)
+        ("mainWidgetDocked", "bool", "", true, true)
+        ("getSupportedProperties", "ComponentInterface::ComponentProperties", "", true, true)
+        .newLine()
+        .signalsSection()
+        ("mainWidgetDockToggled", "void", "QWidget* widget", true)
+        .newLine()
+        .slotsSection()
+        ("stopSimulation", "void", "", true)
+        ("startSimulation", "void", "", true)
+        .newLine()
+        .privateSection()
+        ("QScopedPointer<CanRawViewPrivate>","d_ptr");
+    // clang-format on
+
+    hdrBuff += "#ifndef " + componentNameUpper + "_H\n";
+    hdrBuff += "#define " + componentNameUpper + "_H\n\n";
+
+    hdrBuff += "#include <QtCore/QObject>\n";
+    hdrBuff += "#include <QtCore/QScopedPointer>\n";
+    hdrBuff += "#include <componentinterface.h>\n";
+    hdrBuff += "#include <context.h>\n";
+    hdrBuff += "#include <memory>\n\n";
+
+    hdrBuff += "class " + componentName + "Private;\n";
+    hdrBuff += "class QWidget;\n\n";
+
+    hdrBuff += classDesc.getHdr();
+
+    hdrBuff += "\n#endif //" + componentNameUpper + "_H\n";
+
+    srcBuff += classDesc.getSrc();
+
+    return {hdrBuff, srcBuff};
+}
 
 } // namespace
 
@@ -120,15 +209,9 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
-    // clang-format off
-    std::cout << FuncDefAdder("SomeClass")
-        .publicSection()
-        ("blahFunc", "void", "int i", true, true)
-        ("blahFunc2", "std::string", "int a, int b")
-        .privateSection()
-        ("das", "dasda", "dsdds")
-        .get();
-    // clang-format on
+    auto componentName = result["n"].as<std::string>();
+
+    //std::cout << genComponentHeader(componentName);
 
     return EXIT_SUCCESS;
 }
