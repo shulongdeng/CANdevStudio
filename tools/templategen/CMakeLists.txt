@@ -6,4 +6,5 @@ set(SRC
     )
 
 add_executable(templategen ${SRC})
+target_link_libraries(templategen ${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY})
 

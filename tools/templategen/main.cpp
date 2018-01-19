@@ -1,61 +1,76 @@
+#include <boost/filesystem.hpp>
 #include <cxxopts.hpp>
 #include <spdlog/fmt/fmt.h>
 
 namespace {
 
-struct FuncDefAdder {
-    FuncDefAdder(const std::string& className, const std::string& base = "") 
+struct ComponentGenerator {
+    ComponentGenerator(const std::string& className, const std::string& base = "")
         : _className(className)
     {
         using namespace fmt::literals;
 
         _hdrBuff += fmt::format("class {name}{base} {{\n", "name"_a = className,
             "base"_a = base.length() ? fmt::format(" : {}", base) : "");
+
+        _srcBuff += fmt::format(R"(
+{className}::{className}()
+{{
+}}
+)",
+            "className"_a = _className);
+
+        _srcBuff += fmt::format(R"(
+{className}::~{className}()
+{{
+}}
+)",
+            "className"_a = _className);
     }
 
-    FuncDefAdder& privateSection()
+    ComponentGenerator& privateSection()
     {
         _hdrBuff += "private:\n";
 
         return *this;
     }
 
-    FuncDefAdder& signalsSection()
+    ComponentGenerator& signalsSection()
     {
         _hdrBuff += "signals:\n";
 
         return *this;
     }
 
-    FuncDefAdder& slotsSection()
+    ComponentGenerator& slotsSection()
     {
         _hdrBuff += "public slots:\n";
 
         return *this;
     }
 
-    FuncDefAdder& publicSection()
+    ComponentGenerator& publicSection()
     {
         _hdrBuff += "public:\n";
 
         return *this;
     }
 
-    FuncDefAdder& newLine()
+    ComponentGenerator& newLine()
     {
         _hdrBuff += "\n";
 
         return *this;
     }
 
-    FuncDefAdder& operator()(const std::string& line)
+    ComponentGenerator& operator()(const std::string& line)
     {
         _hdrBuff += line + "\n";
 
         return *this;
     }
 
-    FuncDefAdder& operator()(const std::string& type, const std::string& name)
+    ComponentGenerator& operator()(const std::string& type, const std::string& name)
     {
         using namespace fmt::literals;
 
@@ -64,7 +79,7 @@ struct FuncDefAdder {
         return *this;
     }
 
-    FuncDefAdder& operator()(const std::string& name, const std::string& ret, const std::string& args,
+    ComponentGenerator& operator()(const std::string& name, const std::string& ret, const std::string& args,
         bool over = false, bool constant = false)
     {
         using namespace fmt::literals;
@@ -85,12 +100,8 @@ struct FuncDefAdder {
     return{retVal};
 }}
 )",
-                "ret"_a = ret,
-                "funcName"_a = name,
-                "className"_a = _className,
-                "args"_a = args,
-                "const"_a = constant ? " const" : "",
-                "retVal"_a = ret == "void"? "" : "{}");
+            "ret"_a = ret, "funcName"_a = name, "className"_a = _className, "args"_a = args,
+            "const"_a = constant ? " const" : "", "retVal"_a = ret == "void" ? "" : "{}");
 
         return *this;
     }
@@ -117,20 +128,26 @@ private:
     bool _finished{ false };
 };
 
+std::string str_tolower(std::string s)
+{
+    std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return std::tolower(c); });
+    return s;
+}
+
 std::string str_toupper(std::string s)
 {
     std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return std::toupper(c); });
     return s;
 }
 
-std::pair<std::string, std::string>  genComponentImpl(const std::string& componentName)
+std::pair<std::string, std::string> genComponentImpl(const std::string& componentName)
 {
     std::string srcBuff;
     std::string hdrBuff;
     auto componentNameUpper = str_toupper(componentName);
 
     // clang-format off
-    FuncDefAdder classDesc(componentName, "public QObject, public ComponentInterfac");
+    ComponentGenerator classDesc(componentName, "public QObject, public ComponentInterfac");
 
     classDesc
         ("    Q_OBJECT")
@@ -177,9 +194,28 @@ std::pair<std::string, std::string>  genComponentImpl(const std::string& compone
 
     hdrBuff += "\n#endif //" + componentNameUpper + "_H\n";
 
+    srcBuff += "#include \"" + str_tolower(componentName) + ".h\"\n";
     srcBuff += classDesc.getSrc();
 
-    return {hdrBuff, srcBuff};
+    return { hdrBuff, srcBuff };
+}
+
+std::string genCMake(const std::string name)
+{
+    using namespace fmt::literals;
+
+    return fmt::format(R"(set(COMPONENT_NAME {name})
+
+set(SRC
+#    gui/{name}.ui
+    {name}.cpp
+)
+
+add_library(${{COMPONENT_NAME}} ${{SRC}})
+target_link_libraries(${{COMPONENT_NAME}} Qt5::Widgets Qt5::Core Qt5::SerialBus nodes cds-common)
+target_include_directories(${{COMPONENT_NAME}} INTERFACE ${{CMAKE_CURRENT_SOURCE_DIR}})
+)",
+        "name"_a = name);
 }
 
 } // namespace
@@ -187,7 +223,6 @@ std::pair<std::string, std::string>  genComponentImpl(const std::string& compone
 int main(int argc, char* argv[])
 {
     cxxopts::Options options(argv[0], "CANdevStudio component template generator");
-    // options.custom_help("-n NewComponent -o ~/CANdevStudio/src/components/newcomponent [OPTIONS...]");
 
     // clang-format off
     options.add_options()
@@ -210,8 +245,31 @@ int main(int argc, char* argv[])
     }
 
     auto componentName = result["n"].as<std::string>();
+    auto componentPath = result["o"].as<std::string>();
+    auto componentNameLower = str_tolower(componentName);
 
-    //std::cout << genComponentHeader(componentName);
+    boost::filesystem::path componentDir(componentPath);
+    if (!boost::filesystem::exists(componentDir)) {
+        if (!boost::filesystem::create_directory(componentDir)) {
+            std::cerr << "Failed to create output directory '" << componentPath << "'" << std::endl;
+
+            return EXIT_FAILURE;
+        }
+    }
+
+    boost::filesystem::ofstream cmakeFile({ componentDir / "CMakeLists.txt" });
+    cmakeFile << genCMake(componentNameLower);
+    cmakeFile.close();
+
+    auto compImpl = genComponentImpl(componentName);
+
+    boost::filesystem::ofstream compHdrFile({ componentDir / (componentNameLower + ".h") });
+    compHdrFile << compImpl.first;
+    compHdrFile.close();
+
+    boost::filesystem::ofstream compSrcFile({ componentDir / (componentNameLower + ".cpp") });
+    compSrcFile << compImpl.second;
+    compSrcFile.close();
 
     return EXIT_SUCCESS;
 }
