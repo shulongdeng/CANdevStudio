@@ -85,7 +85,7 @@ struct ComponentGenerator {
         using namespace fmt::literals;
 
         // clang-format off
-        _hdrBuff += fmt::format("{indent}{ret} {name}({args}){override}{const};\n", 
+        _hdrBuff += fmt::format("{indent}{ret} {name}({args}){const}{override};\n", 
                 "ret"_a = ret,
                 "name"_a = name,
                 "args"_a = args,
@@ -147,15 +147,15 @@ std::pair<std::string, std::string> genComponentImpl(const std::string& componen
     auto componentNameUpper = str_toupper(componentName);
 
     // clang-format off
-    ComponentGenerator classDesc(componentName, "public QObject, public ComponentInterfac");
+    ComponentGenerator classDesc(componentName, "public QObject, public ComponentInterface");
 
     classDesc
         ("    Q_OBJECT")
-        ("    Q_DECLARE_PRIVATE(" + componentNameUpper + ")")
+        ("    Q_DECLARE_PRIVATE(" + componentName + ")")
         .newLine()
         .publicSection()
         ("    " + componentName + "();")
-        ("    explicit " + componentName + "(CanRawViewCtx&& ctx);")
+        ("    explicit " + componentName + "(" + componentName + "Ctx&& ctx);")
         ("    ~" + componentName + "();")
         .newLine()
         ("mainWidget", "QWidget*", "", true)
@@ -175,7 +175,7 @@ std::pair<std::string, std::string> genComponentImpl(const std::string& componen
         ("startSimulation", "void", "", true)
         .newLine()
         .privateSection()
-        ("QScopedPointer<CanRawViewPrivate>","d_ptr");
+        ("QScopedPointer<" + componentName + "Private>","d_ptr");
     // clang-format on
 
     hdrBuff += "#ifndef " + componentNameUpper + "_H\n";
