@@ -12,20 +12,6 @@ struct ComponentGenerator {
 
         _hdrBuff += fmt::format("class {name}{base} {{\n", "name"_a = className,
             "base"_a = base.length() ? fmt::format(" : {}", base) : "");
-
-        _srcBuff += fmt::format(R"(
-{className}::{className}()
-{{
-}}
-)",
-            "className"_a = _className);
-
-        _srcBuff += fmt::format(R"(
-{className}::~{className}()
-{{
-}}
-)",
-            "className"_a = _className);
     }
 
     ComponentGenerator& privateSection()
@@ -148,7 +134,6 @@ std::pair<std::string, std::string> genComponentImpl(const std::string& componen
 
     // clang-format off
     ComponentGenerator classDesc(componentName, "public QObject, public ComponentInterface");
-
     classDesc
         ("    Q_OBJECT")
         ("    Q_DECLARE_PRIVATE(" + componentName + ")")
@@ -188,13 +173,85 @@ std::pair<std::string, std::string> genComponentImpl(const std::string& componen
     hdrBuff += "#include <memory>\n\n";
 
     hdrBuff += "class " + componentName + "Private;\n";
-    hdrBuff += "class QWidget;\n\n";
+    hdrBuff += "class QWidget;\n";
+
+    hdrBuff += "struct I" + componentName + "Gui;\n";
+    hdrBuff += "typedef Context<I" + componentName + "Gui> " + componentName + "Ctx;\n\n";
 
     hdrBuff += classDesc.getHdr();
 
     hdrBuff += "\n#endif //" + componentNameUpper + "_H\n";
 
     srcBuff += "#include \"" + str_tolower(componentName) + ".h\"\n";
+    srcBuff += "#include \"" + str_tolower(componentName) + "_p.h\"\n";
+
+    using namespace fmt::literals;
+
+    srcBuff += fmt::format(R"(
+{className}::{className}()
+    : d_ptr(new {className}Private(this))
+{{
+}}
+)",
+        "className"_a = componentName);
+
+    srcBuff += fmt::format(R"(
+{className}::~{className}()
+{{
+}}
+)",
+        "className"_a = componentName);
+
+
+    srcBuff += classDesc.getSrc();
+
+    return { hdrBuff, srcBuff };
+}
+
+std::pair<std::string, std::string> genPrivateImpl(const std::string& componentName)
+{
+    std::string srcBuff;
+    std::string hdrBuff;
+    auto privateName = componentName + "Private";
+    auto componentNameUpper = str_toupper(componentName);
+
+    using namespace fmt::literals;
+
+    // clang-format off
+    ComponentGenerator classDesc(privateName, "public QObject");
+    classDesc
+        ("    Q_OBJECT")
+        ("    Q_DECLARE_PUBLIC(" + componentName + ")")
+        .newLine()
+        .publicSection()
+        (fmt::format("    {priv}({comp}* q);", "priv"_a = privateName, "comp"_a = componentName))
+        .newLine()
+        .privateSection()
+        (componentName + "*","q_ptr");
+    // clang-format on
+
+    hdrBuff += "#ifndef " + componentNameUpper + "_P_H\n";
+    hdrBuff += "#define " + componentNameUpper + "_P_H\n\n";
+
+    hdrBuff += "#include <QtCore/QObject>\n";
+    hdrBuff += "#include <memory>\n\n";
+
+    hdrBuff += "class " + componentName + ";\n\n";
+
+    hdrBuff += classDesc.getHdr();
+
+    hdrBuff += "\n#endif //" + componentNameUpper + "_P_H\n";
+
+    srcBuff += "#include \"" + str_tolower(componentName) + "_p.h\"\n";
+
+    srcBuff += fmt::format(R"(
+{className}::{className}({comp} *q)
+    : q_ptr(q)
+{{
+}}
+)",
+        "className"_a = privateName, "comp"_a = componentName);
+
     srcBuff += classDesc.getSrc();
 
     return { hdrBuff, srcBuff };
@@ -209,6 +266,7 @@ std::string genCMake(const std::string name)
 set(SRC
 #    gui/{name}.ui
     {name}.cpp
+    {name}_p.cpp
 )
 
 add_library(${{COMPONENT_NAME}} ${{SRC}})
@@ -270,6 +328,16 @@ int main(int argc, char* argv[])
     boost::filesystem::ofstream compSrcFile({ componentDir / (componentNameLower + ".cpp") });
     compSrcFile << compImpl.second;
     compSrcFile.close();
+
+    auto privImpl = genPrivateImpl(componentName);
+
+    boost::filesystem::ofstream privHdrFile({ componentDir / (componentNameLower + "_p.h") });
+    privHdrFile << privImpl.first;
+    privHdrFile.close();
+
+    boost::filesystem::ofstream privSrcFile({ componentDir / (componentNameLower + "_p.cpp") });
+    privSrcFile << privImpl.second;
+    privSrcFile.close();
 
     return EXIT_SUCCESS;
 }
