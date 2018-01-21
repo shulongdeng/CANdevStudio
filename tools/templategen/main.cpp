@@ -23,6 +23,245 @@ std::string genCMake(const std::string name)
     return fmt::format(R"(set(COMPONENT_NAME {name})
 
 set(SRC
+    {name}.cpp
+    {name}_p.cpp
+)
+
+add_library(${{COMPONENT_NAME}} ${{SRC}})
+target_link_libraries(${{COMPONENT_NAME}} Qt5::Widgets Qt5::Core Qt5::SerialBus nodes cds-common)
+target_include_directories(${{COMPONENT_NAME}} INTERFACE ${{CMAKE_CURRENT_SOURCE_DIR}})
+)",
+        "name"_a = name);
+}
+
+
+std::string genComponentHdr(const std::string& name)
+{
+    using namespace fmt::literals;
+
+    return fmt::format(R"(#ifndef {nameUpper}_H
+#define {nameUpper}_H
+
+#include <QtCore/QObject>
+#include <QtCore/QScopedPointer>
+#include <componentinterface.h>
+#include <context.h>
+#include <memory>
+
+class {name}Private;
+class QWidget;
+typedef Context<> {name}Ctx;
+
+class {name} : public QObject, public ComponentInterface {{
+    Q_OBJECT
+    Q_DECLARE_PRIVATE({name})
+
+public:
+    {name}();
+    explicit {name}({name}Ctx&& ctx);
+    ~{name}();
+
+    QWidget* mainWidget() override;
+    void setConfig(const QJsonObject& json) override;
+    void setConfig(const QObject& qobject) override;
+    QJsonObject getConfig() const override;
+    std::shared_ptr<QObject> getQConfig() const override;
+    void configChanged() override;
+    bool mainWidgetDocked() const override;
+    ComponentInterface::ComponentProperties getSupportedProperties() const override;
+
+signals:
+    void mainWidgetDockToggled(QWidget* widget) override;
+
+public slots:
+    void stopSimulation() override;
+    void startSimulation() override;
+
+private:
+    QScopedPointer<{name}Private> d_ptr;
+}};
+
+#endif //{nameUpper}_H
+)",
+    "name"_a = name, "nameUpper"_a = str_toupper(name));
+
+}
+
+std::string genComponentSrc(const std::string& name)
+{
+    using namespace fmt::literals;
+
+    return fmt::format(R"(#include "{nameLower}.h"
+#include "{nameLower}_p.h"
+#include <confighelpers.h>
+
+{name}::{name}()
+    : d_ptr(new {name}Private(this))
+{{
+}}
+
+{name}::{name}({name}Ctx&& ctx)
+    : d_ptr(new {name}Private(this, std::move(ctx)))
+{{
+}}
+
+{name}::~{name}()
+{{
+}}
+
+QWidget* {name}::mainWidget()
+{{
+    // Component does not have main widget
+    return nullptr;
+}}
+
+void {name}::setConfig(const QJsonObject& json)
+{{
+    Q_D({name});
+
+    d_ptr->setSettings(json);
+}}
+
+void {name}::setConfig(const QObject& qobject)
+{{
+    Q_D({name});
+
+    configHelpers::setQConfig(qobject, getSupportedProperties(), d->_props);
+}}
+
+QJsonObject {name}::getConfig() const
+{{
+    return d_ptr->getSettings();
+}}
+
+std::shared_ptr<QObject> {name}::getQConfig() const
+{{
+    const Q_D({name});
+
+    return configHelpers::getQConfig(getSupportedProperties(), d->_props);
+}}
+
+void {name}::configChanged()
+{{
+}}
+
+bool {name}::mainWidgetDocked() const
+{{
+    // Widget does not exist. Return always true
+    return true;
+}}
+
+ComponentInterface::ComponentProperties {name}::getSupportedProperties() const
+{{
+    return d_ptr->getSupportedProperties();
+}}
+
+void {name}::stopSimulation()
+{{
+    Q_D({name});
+
+    d->_simStarted = false;
+}}
+
+void {name}::startSimulation()
+{{
+    Q_D({name});
+
+    d->_simStarted = true;
+}}
+)", "name"_a = name, "nameLower"_a = str_tolower(name));
+}
+
+std::string genPrivateHdr(const std::string& name)
+{
+    using namespace fmt::literals;
+
+    return fmt::format(R"(#ifndef {nameUpper}_P_H
+#define {nameUpper}_P_H
+
+#include <QtCore/QObject>
+#include <memory>
+#include "{nameLower}.h"
+
+class {name};
+
+class {name}Private : public QObject {{
+    Q_OBJECT
+    Q_DECLARE_PUBLIC({name})
+
+public:
+    {name}Private({name}* q, {name}Ctx&& ctx = {name}Ctx());
+    ComponentInterface::ComponentProperties getSupportedProperties() const;
+    QJsonObject getSettings();
+    void setSettings(const QJsonObject& json);
+
+private:
+    void initProps();
+
+public:
+    bool _simStarted{{ false }};
+    {name}Ctx _ctx;
+    std::map<QString, QVariant> _props;
+
+private:
+    {name}* q_ptr;
+    const QString _nameProperty = "name";
+    ComponentInterface::ComponentProperties _supportedProps = {{
+            {{_nameProperty,   {{QVariant::String, true}}}}
+    }};
+}};
+
+#endif // {nameUpper}_P_H
+)",
+    "name"_a = name, "nameUpper"_a = str_toupper(name), "nameLower"_a = str_tolower(name));
+
+}
+
+std::string genPrivateSrc(const std::string& name)
+{
+    using namespace fmt::literals;
+
+    return fmt::format(R"(#include "{nameLower}_p.h"
+
+{name}Private::{name}Private({name} *q, {name}Ctx&& ctx)
+    : _ctx(std::move(ctx))
+    , q_ptr(q)
+{{
+    initProps();
+}}
+
+void {name}Private::initProps()
+{{
+    for (const auto& p: _supportedProps)
+    {{
+        _props[p.first];
+    }}
+}}
+
+ComponentInterface::ComponentProperties {name}Private::getSupportedProperties() const
+{{
+    return _supportedProps;
+}}
+
+QJsonObject {name}Private::getSettings()
+{{
+    return {{ }};
+}}
+
+void {name}Private::setSettings(const QJsonObject& json)
+{{
+    (void)json;
+}}
+)", "name"_a = name, "nameLower"_a = str_tolower(name));
+}
+
+std::string genGuiCMake(const std::string name)
+{
+    using namespace fmt::literals;
+
+    return fmt::format(R"(set(COMPONENT_NAME {name})
+
+set(SRC
     gui/{name}.ui
     gui/{name}guiimpl.h
     {name}.cpp
@@ -392,24 +631,32 @@ int main(int argc, char* argv[])
         }
     }
 
-    boost::filesystem::path componentGuiDir(componentPath + "/gui");
-    if (!boost::filesystem::exists(componentGuiDir)) {
-        if (!boost::filesystem::create_directory(componentGuiDir)) {
-            std::cerr << "Failed to create output directory '" << componentPath << "/gui'" << std::endl;
+    if(result.count("no-gui")) {
+        writeToFile(componentDir / "CMakeLists.txt", genCMake(componentNameLower));
+        writeToFile(componentDir / (componentNameLower + ".h"), genComponentHdr(componentName));
+        writeToFile(componentDir / (componentNameLower + ".cpp"), genComponentSrc(componentName));
+        writeToFile(componentDir / (componentNameLower + "_p.h"), genPrivateHdr(componentName));
+        writeToFile(componentDir / (componentNameLower + "_p.cpp"), genPrivateSrc(componentName));
+    } else {
+        boost::filesystem::path componentGuiDir(componentPath + "/gui");
+        if (!boost::filesystem::exists(componentGuiDir)) {
+            if (!boost::filesystem::create_directory(componentGuiDir)) {
+                std::cerr << "Failed to create output directory '" << componentPath << "/gui'" << std::endl;
 
-            return EXIT_FAILURE;
+                return EXIT_FAILURE;
+            }
         }
+
+        writeToFile(componentDir / "CMakeLists.txt", genGuiCMake(componentNameLower));
+        writeToFile(componentDir / (componentNameLower + ".h"), genGuiComponentHdr(componentName));
+        writeToFile(componentDir / (componentNameLower + ".cpp"), genGuiComponentSrc(componentName));
+        writeToFile(componentDir / (componentNameLower + "_p.h"), genGuiPrivateHdr(componentName));
+        writeToFile(componentDir / (componentNameLower + "_p.cpp"), genGuiPrivateSrc(componentName));
+
+        writeToFile(componentGuiDir / (componentNameLower + "guiimpl.h"), genGuiImpl(componentName));
+        writeToFile(componentGuiDir / (componentNameLower + "guiint.h"), genGuiInt(componentName));
+        writeToFile(componentGuiDir / (componentNameLower + ".ui"), genGui(componentName));
     }
-
-    writeToFile(componentDir / "CMakeLists.txt", genCMake(componentNameLower));
-    writeToFile(componentDir / (componentNameLower + ".h"), genGuiComponentHdr(componentName));
-    writeToFile(componentDir / (componentNameLower + ".cpp"), genGuiComponentSrc(componentName));
-    writeToFile(componentDir / (componentNameLower + "_p.h"), genGuiPrivateHdr(componentName));
-    writeToFile(componentDir / (componentNameLower + "_p.cpp"), genGuiPrivateSrc(componentName));
-
-    writeToFile(componentGuiDir / (componentNameLower + "guiimpl.h"), genGuiImpl(componentName));
-    writeToFile(componentGuiDir / (componentNameLower + "guiint.h"), genGuiInt(componentName));
-    writeToFile(componentGuiDir / (componentNameLower + ".ui"), genGui(componentName));
 
     return EXIT_SUCCESS;
 }
