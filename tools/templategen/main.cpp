@@ -96,6 +96,7 @@ std::string genGuiComponentSrc(const std::string& name)
 
     return fmt::format(R"(#include "{nameLower}.h"
 #include "{nameLower}_p.h"
+#include <confighelpers.h>
 
 {name}::{name}()
     : d_ptr(new {name}Private(this))
@@ -113,27 +114,35 @@ std::string genGuiComponentSrc(const std::string& name)
 
 QWidget* {name}::mainWidget()
 {{
-    return {{ }};
+    Q_D({name});
+
+    return d->_ui.mainWidget();
 }}
 
 void {name}::setConfig(const QJsonObject& json)
 {{
-    (void)json;
+    Q_D({name});
+
+    d_ptr->setSettings(json);
 }}
 
 void {name}::setConfig(const QObject& qobject)
 {{
-    (void)qobject;
+    Q_D({name});
+
+    configHelpers::setQConfig(qobject, getSupportedProperties(), d->_props);
 }}
 
 QJsonObject {name}::getConfig() const
 {{
-    return {{ }};
+    return d_ptr->getSettings();
 }}
 
 std::shared_ptr<QObject> {name}::getQConfig() const
 {{
-    return {{ }};
+    const Q_D({name});
+
+    return configHelpers::getQConfig(getSupportedProperties(), d->_props);
 }}
 
 void {name}::configChanged()
@@ -147,15 +156,21 @@ bool {name}::mainWidgetDocked() const
 
 ComponentInterface::ComponentProperties {name}::getSupportedProperties() const
 {{
-    return {{ }};
+    return d_ptr->getSupportedProperties();
 }}
 
 void {name}::stopSimulation()
 {{
+    Q_D({name});
+
+    d->_simStarted = false;
 }}
 
 void {name}::startSimulation()
 {{
+    Q_D({name});
+
+    d->_simStarted = true;
 }}
 )", "name"_a = name, "nameLower"_a = str_tolower(name));
 }
@@ -180,12 +195,26 @@ class {name}Private : public QObject {{
 
 public:
     {name}Private({name}* q, {name}Ctx&& ctx = {name}Ctx(new {name}GuiImpl));
+    ComponentInterface::ComponentProperties getSupportedProperties() const;
+    QJsonObject getSettings();
+    void setSettings(const QJsonObject& json);
 
-    bool _docked {{ true }};
+private:
+    void initProps();
+
+public:
+    bool _simStarted{{ false }};
+    {name}Ctx _ctx;
+    {name}GuiInt& _ui;
+    bool _docked{{ true }};
+    std::map<QString, QVariant> _props;
 
 private:
     {name}* q_ptr;
-    {name}Ctx _ctx;
+    const QString _nameProperty = "name";
+    ComponentInterface::ComponentProperties _supportedProps = {{
+            {{_nameProperty,   {{QVariant::String, true}}}}
+    }};
 }};
 
 #endif // {nameUpper}_P_H
@@ -201,9 +230,34 @@ std::string genGuiPrivateSrc(const std::string& name)
     return fmt::format(R"(#include "{nameLower}_p.h"
 
 {name}Private::{name}Private({name} *q, {name}Ctx&& ctx)
-    : q_ptr(q)
-    , _ctx(std::move(ctx))
+    : _ctx(std::move(ctx))
+    , _ui(_ctx.get<{name}GuiInt>())
+    , q_ptr(q)
 {{
+    initProps();
+}}
+
+void {name}Private::initProps()
+{{
+    for (const auto& p: _supportedProps)
+    {{
+        _props[p.first];
+    }}
+}}
+
+ComponentInterface::ComponentProperties {name}Private::getSupportedProperties() const
+{{
+    return _supportedProps;
+}}
+
+QJsonObject {name}Private::getSettings()
+{{
+    return {{ }};
+}}
+
+void {name}Private::setSettings(const QJsonObject& json)
+{{
+    (void)json;
 }}
 )", "name"_a = name, "nameLower"_a = str_tolower(name));
 }
