@@ -4,116 +4,6 @@
 
 namespace {
 
-struct ComponentGenerator {
-    ComponentGenerator(const std::string& className, const std::string& base = "")
-        : _className(className)
-    {
-        using namespace fmt::literals;
-
-        _hdrBuff += fmt::format("class {name}{base} {{\n", "name"_a = className,
-            "base"_a = base.length() ? fmt::format(" : {}", base) : "");
-    }
-
-    ComponentGenerator& privateSection()
-    {
-        _hdrBuff += "private:\n";
-
-        return *this;
-    }
-
-    ComponentGenerator& signalsSection()
-    {
-        _hdrBuff += "signals:\n";
-
-        return *this;
-    }
-
-    ComponentGenerator& slotsSection()
-    {
-        _hdrBuff += "public slots:\n";
-
-        return *this;
-    }
-
-    ComponentGenerator& publicSection()
-    {
-        _hdrBuff += "public:\n";
-
-        return *this;
-    }
-
-    ComponentGenerator& newLine()
-    {
-        _hdrBuff += "\n";
-
-        return *this;
-    }
-
-    ComponentGenerator& operator()(const std::string& line)
-    {
-        _hdrBuff += line + "\n";
-
-        return *this;
-    }
-
-    ComponentGenerator& operator()(const std::string& type, const std::string& name)
-    {
-        using namespace fmt::literals;
-
-        _hdrBuff += fmt::format("{indent}{type} {name};\n", "indent"_a = "    ", "type"_a = type, "name"_a = name);
-
-        return *this;
-    }
-
-    ComponentGenerator& operator()(const std::string& name, const std::string& ret, const std::string& args,
-        bool over = false, bool constant = false)
-    {
-        using namespace fmt::literals;
-
-        // clang-format off
-        _hdrBuff += fmt::format("{indent}{ret} {name}({args}){const}{override};\n", 
-                "ret"_a = ret,
-                "name"_a = name,
-                "args"_a = args,
-                "override"_a = over ? " override" : "",
-                "const"_a = constant ? " const" : "",
-                "indent"_a = "    ");
-        // clang-format on
-
-        _srcBuff += fmt::format(R"(
-{ret} {className}::{funcName}({args}){const}
-{{
-    return{retVal};
-}}
-)",
-            "ret"_a = ret, "funcName"_a = name, "className"_a = _className, "args"_a = args,
-            "const"_a = constant ? " const" : "", "retVal"_a = ret == "void" ? "" : "{}");
-
-        return *this;
-    }
-
-    std::string getSrc()
-    {
-        return _srcBuff;
-    }
-
-    std::string getHdr()
-    {
-        if (!_finished) {
-            _hdrBuff += "};\n";
-            _finished = true;
-        }
-
-        return _hdrBuff;
-    }
-
-private:
-    std::string _srcBuff;
-    std::string _hdrBuff;
-    std::string _className;
-    bool _finished{ false };
-};
-
 std::string str_tolower(std::string s)
 {
     std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return std::tolower(c); });
@@ -124,137 +14,6 @@ std::string str_toupper(std::string s)
 {
     std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return std::toupper(c); });
     return s;
-}
-
-std::pair<std::string, std::string> genComponentImpl(const std::string& componentName)
-{
-    std::string srcBuff;
-    std::string hdrBuff;
-    auto componentNameUpper = str_toupper(componentName);
-
-    // clang-format off
-    ComponentGenerator classDesc(componentName, "public QObject, public ComponentInterface");
-    classDesc
-        ("    Q_OBJECT")
-        ("    Q_DECLARE_PRIVATE(" + componentName + ")")
-        .newLine()
-        .publicSection()
-        ("    " + componentName + "();")
-        ("    explicit " + componentName + "(" + componentName + "Ctx&& ctx);")
-        ("    ~" + componentName + "();")
-        .newLine()
-        ("mainWidget", "QWidget*", "", true)
-        ("setConfig", "void", "const QJsonObject& json", true)
-        ("setConfig", "void", "const QObject& qobject", true)
-        ("getConfig", "QJsonObject", "", true, true)
-        ("getQConfig", "std::shared_ptr<QObject>", "", true, true)
-        ("configChanged", "void", "", true)
-        ("mainWidgetDocked", "bool", "", true, true)
-        ("getSupportedProperties", "ComponentInterface::ComponentProperties", "", true, true)
-        .newLine()
-        .signalsSection()
-        ("mainWidgetDockToggled", "void", "QWidget* widget", true)
-        .newLine()
-        .slotsSection()
-        ("stopSimulation", "void", "", true)
-        ("startSimulation", "void", "", true)
-        .newLine()
-        .privateSection()
-        ("QScopedPointer<" + componentName + "Private>","d_ptr");
-    // clang-format on
-
-    hdrBuff += "#ifndef " + componentNameUpper + "_H\n";
-    hdrBuff += "#define " + componentNameUpper + "_H\n\n";
-
-    hdrBuff += "#include <QtCore/QObject>\n";
-    hdrBuff += "#include <QtCore/QScopedPointer>\n";
-    hdrBuff += "#include <componentinterface.h>\n";
-    hdrBuff += "#include <context.h>\n";
-    hdrBuff += "#include <memory>\n\n";
-
-    hdrBuff += "class " + componentName + "Private;\n";
-    hdrBuff += "class QWidget;\n";
-
-    hdrBuff += "struct I" + componentName + "Gui;\n";
-    hdrBuff += "typedef Context<I" + componentName + "Gui> " + componentName + "Ctx;\n\n";
-
-    hdrBuff += classDesc.getHdr();
-
-    hdrBuff += "\n#endif //" + componentNameUpper + "_H\n";
-
-    srcBuff += "#include \"" + str_tolower(componentName) + ".h\"\n";
-    srcBuff += "#include \"" + str_tolower(componentName) + "_p.h\"\n";
-
-    using namespace fmt::literals;
-
-    srcBuff += fmt::format(R"(
-{className}::{className}()
-    : d_ptr(new {className}Private(this))
-{{
-}}
-)",
-        "className"_a = componentName);
-
-    srcBuff += fmt::format(R"(
-{className}::~{className}()
-{{
-}}
-)",
-        "className"_a = componentName);
-
-
-    srcBuff += classDesc.getSrc();
-
-    return { hdrBuff, srcBuff };
-}
-
-std::pair<std::string, std::string> genPrivateImpl(const std::string& componentName)
-{
-    std::string srcBuff;
-    std::string hdrBuff;
-    auto privateName = componentName + "Private";
-    auto componentNameUpper = str_toupper(componentName);
-
-    using namespace fmt::literals;
-
-    // clang-format off
-    ComponentGenerator classDesc(privateName, "public QObject");
-    classDesc
-        ("    Q_OBJECT")
-        ("    Q_DECLARE_PUBLIC(" + componentName + ")")
-        .newLine()
-        .publicSection()
-        (fmt::format("    {priv}({comp}* q);", "priv"_a = privateName, "comp"_a = componentName))
-        .newLine()
-        .privateSection()
-        (componentName + "*","q_ptr");
-    // clang-format on
-
-    hdrBuff += "#ifndef " + componentNameUpper + "_P_H\n";
-    hdrBuff += "#define " + componentNameUpper + "_P_H\n\n";
-
-    hdrBuff += "#include <QtCore/QObject>\n";
-    hdrBuff += "#include <memory>\n\n";
-
-    hdrBuff += "class " + componentName + ";\n\n";
-
-    hdrBuff += classDesc.getHdr();
-
-    hdrBuff += "\n#endif //" + componentNameUpper + "_P_H\n";
-
-    srcBuff += "#include \"" + str_tolower(componentName) + "_p.h\"\n";
-
-    srcBuff += fmt::format(R"(
-{className}::{className}({comp} *q)
-    : q_ptr(q)
-{{
-}}
-)",
-        "className"_a = privateName, "comp"_a = componentName);
-
-    srcBuff += classDesc.getSrc();
-
-    return { hdrBuff, srcBuff };
 }
 
 std::string genCMake(const std::string name)
@@ -274,6 +33,173 @@ target_link_libraries(${{COMPONENT_NAME}} Qt5::Widgets Qt5::Core Qt5::SerialBus 
 target_include_directories(${{COMPONENT_NAME}} INTERFACE ${{CMAKE_CURRENT_SOURCE_DIR}})
 )",
         "name"_a = name);
+}
+
+
+std::string genGuiComponentHdr(const std::string& name)
+{
+    using namespace fmt::literals;
+
+    return fmt::format(R"(#ifndef {nameUpper}_H
+#define {nameUpper}_H
+
+#include <QtCore/QObject>
+#include <QtCore/QScopedPointer>
+#include <componentinterface.h>
+#include <context.h>
+#include <memory>
+
+class {name}Private;
+class QWidget;
+struct I{name}Gui;
+typedef Context<I{name}Gui> {name}Ctx;
+
+class {name} : public QObject, public ComponentInterface {{
+    Q_OBJECT
+    Q_DECLARE_PRIVATE({name})
+
+public:
+    {name}();
+    explicit {name}({name}Ctx&& ctx);
+    ~{name}();
+
+    QWidget* mainWidget() override;
+    void setConfig(const QJsonObject& json) override;
+    void setConfig(const QObject& qobject) override;
+    QJsonObject getConfig() const override;
+    std::shared_ptr<QObject> getQConfig() const override;
+    void configChanged() override;
+    bool mainWidgetDocked() const override;
+    ComponentInterface::ComponentProperties getSupportedProperties() const override;
+
+signals:
+    void mainWidgetDockToggled(QWidget* widget) override;
+
+public slots:
+    void stopSimulation() override;
+    void startSimulation() override;
+
+private:
+    QScopedPointer<{name}Private> d_ptr;
+}};
+
+#endif //{nameUpper}_H
+)",
+    "name"_a = name, "nameUpper"_a = str_toupper(name));
+
+}
+
+std::string genGuiComponentSrc(const std::string& name)
+{
+    using namespace fmt::literals;
+
+    return fmt::format(R"(#include "{nameLower}.h"
+#include "{nameLower}_p.h"
+
+{name}::{name}()
+    : d_ptr(new {name}Private(this))
+{{
+}}
+
+{name}::~{name}()
+{{
+}}
+
+QWidget* {name}::mainWidget()
+{{
+    return {{ }};
+}}
+
+void {name}::setConfig(const QJsonObject& json)
+{{
+}}
+
+void {name}::setConfig(const QObject& qobject)
+{{
+}}
+
+QJsonObject {name}::getConfig() const
+{{
+    return {{ }};
+}}
+
+std::shared_ptr<QObject> {name}::getQConfig() const
+{{
+    return {{ }};
+}}
+
+void {name}::configChanged()
+{{
+}}
+
+bool {name}::mainWidgetDocked() const
+{{
+}}
+
+ComponentInterface::ComponentProperties {name}::getSupportedProperties() const
+{{
+}}
+
+void {name}::mainWidgetDockToggled(QWidget* widget)
+{{
+}}
+
+void {name}::stopSimulation()
+{{
+}}
+
+void {name}::startSimulation()
+{{
+}})", "name"_a = name, "nameLower"_a = str_tolower(name));
+}
+
+std::string genGuiPrivateHdr(const std::string& name)
+{
+    using namespace fmt::literals;
+
+    return fmt::format(R"(#ifndef {nameUpper}_P_H
+#define {nameUpper}_P_H
+
+#include <QtCore/QObject>
+#include <memory>
+
+class {name};
+
+class {name}Private : public QObject {{
+    Q_OBJECT
+    Q_DECLARE_PUBLIC({name})
+
+public:
+    {name}Private({name}* q);
+
+private:
+    {name}* q_ptr;
+}};
+
+#endif // {nameUpper}_P_H
+)",
+    "name"_a = name, "nameUpper"_a = str_toupper(name));
+
+}
+
+std::string genGuiPrivateSrc(const std::string& name)
+{
+    using namespace fmt::literals;
+
+    return fmt::format(R"(#include "{nameLower}_p.h"
+
+{name}Private::{name}Private({name} *q)
+    : q_ptr(q)
+{{
+}}
+)", "name"_a = name, "nameLower"_a = str_tolower(name));
+}
+
+void writeToFile(const boost::filesystem::path& filename, const std::string& content)
+{
+    boost::filesystem::ofstream file(filename);
+    file << content;
+    file.close();
 }
 
 } // namespace
@@ -315,29 +241,11 @@ int main(int argc, char* argv[])
         }
     }
 
-    boost::filesystem::ofstream cmakeFile({ componentDir / "CMakeLists.txt" });
-    cmakeFile << genCMake(componentNameLower);
-    cmakeFile.close();
-
-    auto compImpl = genComponentImpl(componentName);
-
-    boost::filesystem::ofstream compHdrFile({ componentDir / (componentNameLower + ".h") });
-    compHdrFile << compImpl.first;
-    compHdrFile.close();
-
-    boost::filesystem::ofstream compSrcFile({ componentDir / (componentNameLower + ".cpp") });
-    compSrcFile << compImpl.second;
-    compSrcFile.close();
-
-    auto privImpl = genPrivateImpl(componentName);
-
-    boost::filesystem::ofstream privHdrFile({ componentDir / (componentNameLower + "_p.h") });
-    privHdrFile << privImpl.first;
-    privHdrFile.close();
-
-    boost::filesystem::ofstream privSrcFile({ componentDir / (componentNameLower + "_p.cpp") });
-    privSrcFile << privImpl.second;
-    privSrcFile.close();
+    writeToFile(componentDir / "CMakeLists.txt", genCMake(componentNameLower));
+    writeToFile(componentDir / (componentNameLower + ".h"), genGuiComponentHdr(componentName));
+    writeToFile(componentDir / (componentNameLower + ".cpp"), genGuiComponentSrc(componentName));
+    writeToFile(componentDir / (componentNameLower + "_p.h"), genGuiPrivateHdr(componentName));
+    writeToFile(componentDir / (componentNameLower + "_p.cpp"), genGuiPrivateSrc(componentName));
 
     return EXIT_SUCCESS;
 }

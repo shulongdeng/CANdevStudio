@@ -5,6 +5,8 @@ set(SRC
     main.cpp
     )
 
+set_property(SOURCE main.cpp PROPERTY SKIP_AUTOMOC ON)
+
 add_executable(templategen ${SRC})
 target_link_libraries(templategen ${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY})
 
