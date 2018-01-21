@@ -23,7 +23,8 @@ std::string genCMake(const std::string name)
     return fmt::format(R"(set(COMPONENT_NAME {name})
 
 set(SRC
-#    gui/{name}.ui
+    gui/{name}.ui
+    gui/{name}guiimpl.h
     {name}.cpp
     {name}_p.cpp
 )
@@ -51,8 +52,8 @@ std::string genGuiComponentHdr(const std::string& name)
 
 class {name}Private;
 class QWidget;
-struct I{name}Gui;
-typedef Context<I{name}Gui> {name}Ctx;
+struct {name}GuiInt;
+typedef Context<{name}GuiInt> {name}Ctx;
 
 class {name} : public QObject, public ComponentInterface {{
     Q_OBJECT
@@ -101,6 +102,11 @@ std::string genGuiComponentSrc(const std::string& name)
 {{
 }}
 
+{name}::{name}({name}Ctx&& ctx)
+    : d_ptr(new {name}Private(this, std::move(ctx)))
+{{
+}}
+
 {name}::~{name}()
 {{
 }}
@@ -112,10 +118,12 @@ QWidget* {name}::mainWidget()
 
 void {name}::setConfig(const QJsonObject& json)
 {{
+    (void)json;
 }}
 
 void {name}::setConfig(const QObject& qobject)
 {{
+    (void)qobject;
 }}
 
 QJsonObject {name}::getConfig() const
@@ -134,14 +142,12 @@ void {name}::configChanged()
 
 bool {name}::mainWidgetDocked() const
 {{
+    return d_ptr->_docked;
 }}
 
 ComponentInterface::ComponentProperties {name}::getSupportedProperties() const
 {{
-}}
-
-void {name}::mainWidgetDockToggled(QWidget* widget)
-{{
+    return {{ }};
 }}
 
 void {name}::stopSimulation()
@@ -150,7 +156,8 @@ void {name}::stopSimulation()
 
 void {name}::startSimulation()
 {{
-}})", "name"_a = name, "nameLower"_a = str_tolower(name));
+}}
+)", "name"_a = name, "nameLower"_a = str_tolower(name));
 }
 
 std::string genGuiPrivateHdr(const std::string& name)
@@ -162,6 +169,8 @@ std::string genGuiPrivateHdr(const std::string& name)
 
 #include <QtCore/QObject>
 #include <memory>
+#include "gui/{nameLower}guiimpl.h"
+#include "{nameLower}.h"
 
 class {name};
 
@@ -170,15 +179,18 @@ class {name}Private : public QObject {{
     Q_DECLARE_PUBLIC({name})
 
 public:
-    {name}Private({name}* q);
+    {name}Private({name}* q, {name}Ctx&& ctx = {name}Ctx(new {name}GuiImpl));
+
+    bool _docked {{ true }};
 
 private:
     {name}* q_ptr;
+    {name}Ctx _ctx;
 }};
 
 #endif // {nameUpper}_P_H
 )",
-    "name"_a = name, "nameUpper"_a = str_toupper(name));
+    "name"_a = name, "nameUpper"_a = str_toupper(name), "nameLower"_a = str_tolower(name));
 
 }
 
@@ -188,11 +200,96 @@ std::string genGuiPrivateSrc(const std::string& name)
 
     return fmt::format(R"(#include "{nameLower}_p.h"
 
-{name}Private::{name}Private({name} *q)
+{name}Private::{name}Private({name} *q, {name}Ctx&& ctx)
     : q_ptr(q)
+    , _ctx(std::move(ctx))
 {{
 }}
 )", "name"_a = name, "nameLower"_a = str_tolower(name));
+}
+
+std::string genGuiInt(const std::string& name)
+{
+    using namespace fmt::literals;
+
+    return fmt::format(R"(#ifndef {nameUpper}GUIINT_H
+#define {nameUpper}GUIINT_H
+
+#include <Qt>
+#include <functional>
+
+class QWidget;
+
+struct {name}GuiInt {{
+    virtual ~{name}GuiInt()
+    {{
+    }}
+
+    virtual QWidget* mainWidget() = 0;
+}};
+
+#endif // {nameUpper}GUIINT_H
+)", "name"_a = name, "nameUpper"_a = str_toupper(name));
+}
+
+std::string genGuiImpl(const std::string& name)
+{
+    using namespace fmt::literals;
+
+    return fmt::format(R"(#ifndef {nameUpper}GUIIMPL_H
+#define {nameUpper}GUIIMPL_H
+
+#include <QWidget>
+#include "{nameLower}guiint.h"
+#include "ui_{nameLower}.h"
+
+struct {name}GuiImpl : public {name}GuiInt {{
+    {name}GuiImpl()
+        : _ui(new Ui::{name})
+        , _widget(new QWidget)
+    {{
+    }}
+
+    virtual QWidget* mainWidget()
+    {{
+        return _widget;
+    }}
+
+private:
+    Ui::{name}* _ui;
+    QWidget* _widget;
+}};
+
+#endif // {nameUpper}GUIIMPL_H
+)", "name"_a = name, "nameUpper"_a = str_toupper(name), "nameLower"_a = str_tolower(name));
+}
+
+std::string genGui(const std::string& name)
+{
+    using namespace fmt::literals;
+
+    return fmt::format(R"(<ui version="4.0" >
+ <author></author>
+ <comment></comment>
+ <exportmacro></exportmacro>
+ <class>{name}</class>
+ <widget class="QWidget" name="{name}" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>300</height>
+   </rect>
+  </property>
+  <property name="windowTitle" >
+   <string>{name}</string>
+  </property>
+ </widget>
+ <pixmapfunction></pixmapfunction>
+ <connections/>
+</ui>
+)", "name"_a = name);
 }
 
 void writeToFile(const boost::filesystem::path& filename, const std::string& content)
@@ -241,11 +338,24 @@ int main(int argc, char* argv[])
         }
     }
 
+    boost::filesystem::path componentGuiDir(componentPath + "/gui");
+    if (!boost::filesystem::exists(componentGuiDir)) {
+        if (!boost::filesystem::create_directory(componentGuiDir)) {
+            std::cerr << "Failed to create output directory '" << componentPath << "/gui'" << std::endl;
+
+            return EXIT_FAILURE;
+        }
+    }
+
     writeToFile(componentDir / "CMakeLists.txt", genCMake(componentNameLower));
     writeToFile(componentDir / (componentNameLower + ".h"), genGuiComponentHdr(componentName));
     writeToFile(componentDir / (componentNameLower + ".cpp"), genGuiComponentSrc(componentName));
     writeToFile(componentDir / (componentNameLower + "_p.h"), genGuiPrivateHdr(componentName));
     writeToFile(componentDir / (componentNameLower + "_p.cpp"), genGuiPrivateSrc(componentName));
+
+    writeToFile(componentGuiDir / (componentNameLower + "guiimpl.h"), genGuiImpl(componentName));
+    writeToFile(componentGuiDir / (componentNameLower + "guiint.h"), genGuiInt(componentName));
+    writeToFile(componentGuiDir / (componentNameLower + ".ui"), genGui(componentName));
 
     return EXIT_SUCCESS;
 }
