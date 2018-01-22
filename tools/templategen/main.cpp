@@ -585,6 +585,140 @@ std::string genGui(const std::string& name)
 )", "name"_a = name);
 }
 
+std::string genDataModelHdr(const std::string& name)
+{
+    using namespace fmt::literals;
+
+    return fmt::format(R"(#ifndef {nameUpper}MODEL_H
+#define {nameUpper}MODEL_H
+
+#include "componentmodel.h"
+#include "nodepainter.h"
+#include <QtCore/QObject>
+#include <{nameLower}.h>
+
+using QtNodes::NodeData;
+using QtNodes::NodeDataType;
+using QtNodes::PortIndex;
+using QtNodes::PortType;
+
+enum class Direction;
+
+class {name}Model : public ComponentModel<{name}, {name}Model> {{
+    Q_OBJECT
+
+public:
+    {name}Model();
+
+    unsigned int nPorts(PortType portType) const override;
+    NodeDataType dataType(PortType portType, PortIndex portIndex) const override;
+    std::shared_ptr<NodeData> outData(PortIndex port) override;
+    void setInData(std::shared_ptr<NodeData> nodeData, PortIndex port) override;
+    QtNodes::NodePainterDelegate* painterDelegate() const override;
+
+    static QColor headerColor1()
+    {{
+        return QColor(245, 170, 27);
+    }}
+
+    static QColor headerColor2()
+    {{
+        return QColor(84, 84, 84);
+    }}
+
+public slots:
+
+signals:
+
+private:
+    std::unique_ptr<NodePainter> _painter;
+}};
+
+#endif // {nameUpper}MODEL_H
+)", "name"_a = name, "nameUpper"_a = str_toupper(name), "nameLower"_a = str_tolower(name));
+}
+
+std::string genDataModelSrc(const std::string& name)
+{
+    using namespace fmt::literals;
+
+    return fmt::format(R"(#include "{nameLower}model.h"
+#include <datamodeltypes/{nameLower}data.h>
+#include <log.h>
+
+{name}Model::{name}Model()
+    : ComponentModel("{name}")
+    , _painter(std::make_unique<NodePainter>(headerColor1(), headerColor2()))
+{{
+    _label->setAlignment(Qt::AlignVCenter | Qt::AlignHCenter);
+    _label->setFixedSize(75, 25);
+    _label->setAttribute(Qt::WA_TranslucentBackground);
+}}
+
+QtNodes::NodePainterDelegate* {name}Model::painterDelegate() const
+{{
+    return _painter.get();
+}}
+
+unsigned int {name}Model::nPorts(PortType portType) const
+{{
+    // example
+    // assert((PortType::In == portType) || (PortType::Out == portType) || (PortType::None == portType)); // range check
+    // return (PortType::None != portType) ? 1 : 0;
+    (void) portType;
+
+    return {{ }};
+}}
+
+NodeDataType {name}Model::dataType(PortType portType, PortIndex) const
+{{
+    // example
+    // assert((PortType::In == portType) || (PortType::Out == portType)); // allowed input
+    // return (PortType::Out == portType) ? CanDeviceDataOut{{}}.type() : CanDeviceDataIn{{}}.type();
+    (void) portType;
+
+    return {{ }};
+}}
+
+std::shared_ptr<NodeData> {name}Model::outData(PortIndex)
+{{
+    // example
+    // return std::make_shared<CanDeviceDataOut>(_frame, _direction, _status);
+
+    return {{ }};
+}}
+
+void {name}Model::setInData(std::shared_ptr<NodeData> nodeData, PortIndex)
+{{
+    // example
+    // if (nodeData) {{
+    //     auto d = std::dynamic_pointer_cast<CanDeviceDataIn>(nodeData);
+    //     assert(nullptr != d);
+    //     emit sendFrame(d->frame());
+    // }} else {{
+    //     cds_warn("Incorrect nodeData");
+    // }}
+    (void) nodeData;
+}}
+)", "name"_a = name, "nameUpper"_a = str_toupper(name), "nameLower"_a = str_tolower(name));
+}
+
+std::string genDataTypes(const std::string& name)
+{
+    using namespace fmt::literals;
+
+    return fmt::format(R"(#ifndef {nameUpper}DATA_H
+#define {nameUpper}DATA_H
+
+#include "candevicedata.h"
+
+typedef CanDeviceDataIn {name}DataOut;
+typedef CanDeviceDataOut {name}DataIn;
+
+#endif // {nameUpper}DATA_H
+)", "name"_a = name, "nameUpper"_a = str_toupper(name), "nameLower"_a = str_tolower(name));
+}
+
 void writeToFile(const boost::filesystem::path& filename, const std::string& content)
 {
     boost::filesystem::ofstream file(filename);
@@ -601,7 +735,7 @@ int main(int argc, char* argv[])
     // clang-format off
     options.add_options()
     ("n, name", "Component name", cxxopts::value<std::string>(), "name")
-    ("o, output", "Output folder", cxxopts::value<std::string>(), "path")
+    ("o, output", "Output directory. Shall point to src/components directory", cxxopts::value<std::string>(), "path")
     ("g, no-gui", "Component without GUI", cxxopts::value<bool>())
     ("h,help", "Show help message");
     // clang-format on
@@ -619,16 +753,36 @@ int main(int argc, char* argv[])
     }
 
     auto componentName = result["n"].as<std::string>();
-    auto componentPath = result["o"].as<std::string>();
+    auto componentsPath = result["o"].as<std::string>();
     auto componentNameLower = str_tolower(componentName);
 
-    boost::filesystem::path componentDir(componentPath);
+    if (!boost::filesystem::exists( { componentsPath } )) {
+        std::cerr << "component dir does not exist" << std::endl;
+
+        return EXIT_FAILURE;
+    }
+
+    boost::filesystem::path componentDir(componentsPath + "/" + str_tolower(componentName));
     if (!boost::filesystem::exists(componentDir)) {
         if (!boost::filesystem::create_directory(componentDir)) {
-            std::cerr << "Failed to create output directory '" << componentPath << "'" << std::endl;
+            std::cerr << "Failed to create output directory" << std::endl;
 
             return EXIT_FAILURE;
         }
+    }
+
+    boost::filesystem::path projectConfigDir(componentsPath + "/projectconfig" );
+    if (!boost::filesystem::exists(projectConfigDir)) {
+        std::cerr << "projectconfig directory does not exist" << std::endl;
+
+        return EXIT_FAILURE;
+    }
+
+    boost::filesystem::path dataTypesDir(projectConfigDir / "datamodeltypes" );
+    if (!boost::filesystem::exists(dataTypesDir)) {
+        std::cerr << "datamodeltypes directory does not exist" << std::endl;
+
+        return EXIT_FAILURE;
     }
 
     if(result.count("no-gui")) {
@@ -638,10 +792,10 @@ int main(int argc, char* argv[])
         writeToFile(componentDir / (componentNameLower + "_p.h"), genPrivateHdr(componentName));
         writeToFile(componentDir / (componentNameLower + "_p.cpp"), genPrivateSrc(componentName));
     } else {
-        boost::filesystem::path componentGuiDir(componentPath + "/gui");
+        boost::filesystem::path componentGuiDir(componentDir / "gui");
         if (!boost::filesystem::exists(componentGuiDir)) {
             if (!boost::filesystem::create_directory(componentGuiDir)) {
-                std::cerr << "Failed to create output directory '" << componentPath << "/gui'" << std::endl;
+                std::cerr << "Failed to create gui output directory" << std::endl;
 
                 return EXIT_FAILURE;
             }
@@ -657,6 +811,10 @@ int main(int argc, char* argv[])
         writeToFile(componentGuiDir / (componentNameLower + "guiint.h"), genGuiInt(componentName));
         writeToFile(componentGuiDir / (componentNameLower + ".ui"), genGui(componentName));
     }
+
+    writeToFile(projectConfigDir / (componentNameLower + "model.h"), genDataModelHdr(componentName));
+    writeToFile(projectConfigDir / (componentNameLower + "model.cpp"), genDataModelSrc(componentName));
+    writeToFile(dataTypesDir / (componentNameLower + "data.h"), genDataTypes(componentName));
 
     return EXIT_SUCCESS;
 }
