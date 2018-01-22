@@ -28,7 +28,7 @@ struct NodePainter : public QtNodes::NodePainterDelegate {
 
         float diam = nodeStyle.ConnectionPointDiameter;
 
-        QRectF boundary(-diam + 1, -diam + 1, 2.0 * diam + geom.width() - 2, (2.0 * diam + geom.height()) / 3 - 1);
+        QRectF boundary(-diam + 1, -diam + 1, 2.0 * diam + geom.width() - 2, (2.0 * diam + geom.height()) / 3);
 
         double const radius = 3.0;
 
@@ -38,7 +38,7 @@ struct NodePainter : public QtNodes::NodePainterDelegate {
         QFont font({"Arial", 10});
         font.setBold(true);
         painter->setFont(font);
-        painter->drawText(-diam + 6, -diam + 16, model->caption());
+        painter->drawText(-diam + 6, -diam + 17, model->caption());
     }
 
 private:

@@ -3,6 +3,7 @@
 
 #include "canrawsendermodel.h"
 #include "canrawviewmodel.h"
+#include "canrawplayermodel.h"
 #include "flowviewwrapper.h"
 #include "modeltoolbutton.h"
 #include "ui_projectconfig.h"
@@ -34,6 +35,7 @@ public:
         modelRegistry.registerModel<CanDeviceModel>();
         modelRegistry.registerModel<CanRawSenderModel>();
         modelRegistry.registerModel<CanRawViewModel>();
+        modelRegistry.registerModel<CanRawPlayerModel>();
 
         connect(&_graphScene, &QtNodes::FlowScene::nodeCreated, this, &ProjectConfigPrivate::nodeCreatedCallback);
         connect(&_graphScene, &QtNodes::FlowScene::nodeDeleted, this, &ProjectConfigPrivate::nodeDeletedCallback);
@@ -74,6 +76,7 @@ public:
         _ui->deviceWidget->layout()->addWidget(new IconLabel("CanDevice", CanDeviceModel::headerColor1(), CanDeviceModel::headerColor2(), bgColor));
         _ui->rawWidget->layout()->addWidget(new IconLabel("CanRawSender", CanRawSenderModel::headerColor1(), CanRawSenderModel::headerColor2(), bgColor));
         _ui->rawWidget->layout()->addWidget(new IconLabel("CanRawView", CanRawViewModel::headerColor1(), CanRawViewModel::headerColor2(), bgColor));
+        _ui->rawWidget->layout()->addWidget(new IconLabel("CanRawPlayer", CanRawPlayerModel::headerColor1(), CanRawPlayerModel::headerColor2(), bgColor));
     }
 
     ~ProjectConfigPrivate() {}
