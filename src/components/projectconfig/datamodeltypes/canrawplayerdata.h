@@ -4,6 +4,5 @@
 #include "candevicedata.h"
 
 typedef CanDeviceDataIn CanRawPlayerDataOut;
-typedef CanDeviceDataOut CanRawPlayerDataIn;
 
 #endif // CANRAWPLAYERDATA_H
