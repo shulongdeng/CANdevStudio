@@ -16,6 +16,7 @@ public:
     ComponentInterface::ComponentProperties getSupportedProperties() const;
     QJsonObject getSettings();
     void setSettings(const QJsonObject& json);
+    void loadTraceFile(const QString& filename);
 
 private:
     void initProps();

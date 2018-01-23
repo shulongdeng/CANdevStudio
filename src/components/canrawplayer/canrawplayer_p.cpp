@@ -1,6 +1,9 @@
 #include "canrawplayer_p.h"
+#include <QFile>
+#include <QFileInfo>
+#include <log.h>
 
-CanRawPlayerPrivate::CanRawPlayerPrivate(CanRawPlayer *q, CanRawPlayerCtx&& ctx)
+CanRawPlayerPrivate::CanRawPlayerPrivate(CanRawPlayer* q, CanRawPlayerCtx&& ctx)
     : _ctx(std::move(ctx))
     , q_ptr(q)
 {
@@ -9,8 +12,7 @@ CanRawPlayerPrivate::CanRawPlayerPrivate(CanRawPlayer *q, CanRawPlayerCtx&& ctx)
 
 void CanRawPlayerPrivate::initProps()
 {
-    for (const auto& p: _supportedProps)
-    {
+    for (const auto& p : _supportedProps) {
         _props[p.first];
     }
 }
@@ -22,10 +24,20 @@ ComponentInterface::ComponentProperties CanRawPlayerPrivate::getSupportedPropert
 
 QJsonObject CanRawPlayerPrivate::getSettings()
 {
-    return { };
+    return {};
 }
 
 void CanRawPlayerPrivate::setSettings(const QJsonObject& json)
 {
     (void)json;
+}
+
+void CanRawPlayerPrivate::loadTraceFile(const QString& filename)
+{
+    QFileInfo fileNfo(filename);
+
+    if (fileNfo.exists() && fileNfo.isFile()) {
+    } else {
+        cds_warn("File: '{}' does not exist", filename.toStdString());
+    }
 }

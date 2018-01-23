@@ -49,7 +49,14 @@ std::shared_ptr<QObject> CanRawPlayer::getQConfig() const
     return configHelpers::getQConfig(getSupportedProperties(), d->_props);
 }
 
-void CanRawPlayer::configChanged() {}
+void CanRawPlayer::configChanged() 
+{
+    QString fileName = getQConfig()->property("file").toString();
+
+    cds_info("File to open: '{}'", fileName.toStdString());
+
+    d_ptr->loadTraceFile(fileName);
+}
 
 bool CanRawPlayer::mainWidgetDocked() const
 {
