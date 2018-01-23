@@ -74,6 +74,7 @@ void CanRawPlayer::stopSimulation()
     Q_D(CanRawPlayer);
 
     d->_simStarted = false;
+    d->stopPlayback();
 }
 
 void CanRawPlayer::startSimulation()
@@ -81,4 +82,5 @@ void CanRawPlayer::startSimulation()
     Q_D(CanRawPlayer);
 
     d->_simStarted = true;
+    d->startPlayback();
 }
