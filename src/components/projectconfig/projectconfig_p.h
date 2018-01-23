@@ -130,7 +130,9 @@ public:
         if (component.mainWidget() != nullptr) {
             openWidget(node);
         } else {
-            openProperties(node);
+            if(!_simStarted) {
+                openProperties(node);
+            }
         }
     }
 
@@ -144,6 +146,10 @@ public:
 
         QAction actionProperties("Properties", this);
         connect(&actionProperties, &QAction::triggered, [this, &node]() { openProperties(node); });
+
+        if(_simStarted) {
+            actionProperties.setDisabled(true);
+        }
 
         QAction actionDelete("Delete", this);
         connect(&actionDelete, &QAction::triggered, [this, &node]() { _graphScene.removeNode(node); });
@@ -178,13 +184,6 @@ public:
     }
 
 private:
-    QtNodes::FlowScene _graphScene;
-    FlowViewWrapper* _graphView;
-    std::unique_ptr<Ui::ProjectConfigPrivate> _ui;
-    int _nodeCnt = 1;
-    ProjectConfig* q_ptr;
-    bool _darkMode;
-
     void openWidget(QtNodes::Node& node)
     {
         Q_Q(ProjectConfig);
@@ -201,10 +200,10 @@ private:
 
         PropertyEditorDialog e(node.nodeDataModel()->name() + " properties", *conf.get());
         if (e.exec() == QDialog::Accepted) {
+            auto& iface = getComponentModel(node);
             conf = e.properties();
             auto nodeCaption = conf->property("name");
             if (nodeCaption.isValid()) {
-                auto& iface = getComponentModel(node);
                 iface.setCaption(nodeCaption.toString());
                 node.nodeGraphicsObject().update();
             }
@@ -240,5 +239,17 @@ private:
         effect->setColor(nodeStyle.ShadowColor);
         node.nodeGraphicsObject().setGraphicsEffect(effect);
     }
+
+public:
+    bool _simStarted{ false };
+
+private:
+    QtNodes::FlowScene _graphScene;
+    FlowViewWrapper* _graphView;
+    std::unique_ptr<Ui::ProjectConfigPrivate> _ui;
+    int _nodeCnt = 1;
+    ProjectConfig* q_ptr;
+    bool _darkMode;
+
 };
 #endif // PROJECTCONFIG_P_H

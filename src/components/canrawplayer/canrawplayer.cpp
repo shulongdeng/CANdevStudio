@@ -1,6 +1,9 @@
 #include "canrawplayer.h"
 #include "canrawplayer_p.h"
+#include <QTimer>
+#include <QtSerialBus/QCanBusFrame>
 #include <confighelpers.h>
+#include <log.h>
 
 CanRawPlayer::CanRawPlayer()
     : d_ptr(new CanRawPlayerPrivate(this))
@@ -12,9 +15,7 @@ CanRawPlayer::CanRawPlayer(CanRawPlayerCtx&& ctx)
 {
 }
 
-CanRawPlayer::~CanRawPlayer()
-{
-}
+CanRawPlayer::~CanRawPlayer() {}
 
 QWidget* CanRawPlayer::mainWidget()
 {
@@ -48,9 +49,7 @@ std::shared_ptr<QObject> CanRawPlayer::getQConfig() const
     return configHelpers::getQConfig(getSupportedProperties(), d->_props);
 }
 
-void CanRawPlayer::configChanged()
-{
-}
+void CanRawPlayer::configChanged() {}
 
 bool CanRawPlayer::mainWidgetDocked() const
 {

@@ -28,8 +28,10 @@ public:
 private:
     CanRawPlayer* q_ptr;
     const QString _nameProperty = "name";
+    const QString _fileProperty = "file";
     ComponentInterface::ComponentProperties _supportedProps = {
-            {_nameProperty,   {QVariant::String, true}}
+            {_nameProperty,   {QVariant::String, true}},
+            {_fileProperty,   {QVariant::String, true}}
     };
 };
 
