@@ -4,6 +4,7 @@
 #include "canrawsendermodel.h"
 #include "canrawviewmodel.h"
 #include "canrawplayermodel.h"
+#include "cansignaldatamodel.h"
 #include "flowviewwrapper.h"
 #include "modeltoolbutton.h"
 #include "ui_projectconfig.h"
@@ -36,6 +37,7 @@ public:
         modelRegistry.registerModel<CanRawSenderModel>();
         modelRegistry.registerModel<CanRawViewModel>();
         modelRegistry.registerModel<CanRawPlayerModel>();
+        modelRegistry.registerModel<CanSignalDataModel>();
 
         connect(&_graphScene, &QtNodes::FlowScene::nodeCreated, this, &ProjectConfigPrivate::nodeCreatedCallback);
         connect(&_graphScene, &QtNodes::FlowScene::nodeDeleted, this, &ProjectConfigPrivate::nodeDeletedCallback);
@@ -51,6 +53,8 @@ public:
         _ui->pbDeviceLayer->setChecked(true);
         connect(_ui->pbRawLayer, &QPushButton::toggled, _ui->rawWidget, &QWidget::setVisible);
         _ui->pbRawLayer->setChecked(true);
+        connect(_ui->pbSignalLayer, &QPushButton::toggled, _ui->signalWidget, &QWidget::setVisible);
+        _ui->pbSignalLayer->setChecked(true);
     }
 
     void addModelIcons()
@@ -72,11 +76,16 @@ public:
         {
             delete item;
         }
+        while ((item = _ui->signalWidget->layout()->takeAt(0)) != nullptr)
+        {
+            delete item;
+        }
 
         _ui->deviceWidget->layout()->addWidget(new IconLabel("CanDevice", CanDeviceModel::headerColor1(), CanDeviceModel::headerColor2(), bgColor));
         _ui->rawWidget->layout()->addWidget(new IconLabel("CanRawSender", CanRawSenderModel::headerColor1(), CanRawSenderModel::headerColor2(), bgColor));
         _ui->rawWidget->layout()->addWidget(new IconLabel("CanRawView", CanRawViewModel::headerColor1(), CanRawViewModel::headerColor2(), bgColor));
         _ui->rawWidget->layout()->addWidget(new IconLabel("CanRawPlayer", CanRawPlayerModel::headerColor1(), CanRawPlayerModel::headerColor2(), bgColor));
+        _ui->signalWidget->layout()->addWidget(new IconLabel("CanSignalData", CanSignalDataModel::headerColor1(), CanSignalDataModel::headerColor2(), bgColor));
     }
 
     ~ProjectConfigPrivate() {}

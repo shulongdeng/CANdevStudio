@@ -98,6 +98,9 @@
         <property name="text">
          <string>Device Layer</string>
         </property>
+        <property name="type" stdset="0">
+         <string>iconSection</string>
+        </property>
        </widget>
       </item>
       <item>
@@ -129,11 +132,48 @@
         <property name="text">
          <string>Raw Layer</string>
         </property>
+        <property name="type" stdset="0">
+         <string>iconSection</string>
+        </property>
        </widget>
       </item>
       <item>
        <widget class="QWidget" name="rawWidget" native="true">
         <layout class="QVBoxLayout" name="verticalLayout_3">
+         <property name="spacing">
+          <number>10</number>
+         </property>
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+        </layout>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="pbSignalLayer">
+        <property name="layoutDirection">
+         <enum>Qt::RightToLeft</enum>
+        </property>
+        <property name="text">
+         <string>Signal Layer</string>
+        </property>
+        <property name="type" stdset="0">
+         <string>iconSection</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QWidget" name="signalWidget" native="true">
+        <layout class="QVBoxLayout" name="verticalLayout_5">
          <property name="spacing">
           <number>10</number>
          </property>
