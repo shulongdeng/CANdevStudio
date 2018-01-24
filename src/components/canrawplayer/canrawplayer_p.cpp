@@ -1,10 +1,16 @@
 #include "canrawplayer_p.h"
+#include <QCanBusFrame>
 #include <QFile>
 #include <QFileInfo>
-#include <log.h>
-#include <QTextStream>
 #include <QRegularExpression>
-#include <QCanBusFrame>
+#include <QTextStream>
+#include <log.h>
+
+namespace {
+
+const uint32_t g_cTick = 10;
+
+} //namespace
 
 CanRawPlayerPrivate::CanRawPlayerPrivate(CanRawPlayer* q, CanRawPlayerCtx&& ctx)
     : _ctx(std::move(ctx))
@@ -12,7 +18,7 @@ CanRawPlayerPrivate::CanRawPlayerPrivate(CanRawPlayer* q, CanRawPlayerCtx&& ctx)
 {
     initProps();
     _timer.setTimerType(Qt::PreciseTimer);
-    _timer.setInterval(1);
+    _timer.setInterval(g_cTick);
     connect(&_timer, &QTimer::timeout, this, &CanRawPlayerPrivate::timeout);
 }
 
@@ -32,8 +38,7 @@ QJsonObject CanRawPlayerPrivate::getSettings()
 {
     QJsonObject json;
 
-    for (const auto& p: _props)
-    {
+    for (const auto& p : _props) {
         json[p.first] = QJsonValue::fromVariant(p.second);
     }
 
@@ -42,8 +47,7 @@ QJsonObject CanRawPlayerPrivate::getSettings()
 
 void CanRawPlayerPrivate::setSettings(const QJsonObject& json)
 {
-    for (const auto& p: _supportedProps)
-    {
+    for (const auto& p : _supportedProps) {
         if (json.contains(p.first))
             _props[p.first] = json[p.first].toVariant();
     }
@@ -72,15 +76,15 @@ void CanRawPlayerPrivate::loadTraceFile(const QString& filename)
     while (!in.atEnd()) {
         QString line = in.readLine();
 
-        const auto &match = re.match(line);
+        const auto& match = re.match(line);
 
-        if(match.hasMatch()) {
-            unsigned int time = static_cast<unsigned int>(std::stof(match.captured(1).toStdString()) * 1000 + 0.5); 
+        if (match.hasMatch()) {
+            unsigned int time = static_cast<unsigned int>(std::stof(match.captured(1).toStdString()) * 1000 + 0.5);
             auto id = std::stoul(match.captured(2).toStdString(), 0, 16);
             auto payload = QByteArray::fromHex(match.captured(5).replace(" ", "").toLatin1());
 
             QCanBusFrame frame(id, payload);
-            if(match.captured(3).length()) {
+            if (match.captured(3).length()) {
                 frame.setExtendedFrameFormat(true);
             }
 
@@ -107,9 +111,9 @@ void CanRawPlayerPrivate::startPlayback()
 
 void CanRawPlayerPrivate::timeout()
 {
-    _ticks++;
+    _ticks += g_cTick;
 
-    while(_frameNdx < _frames.size() && _frames[_frameNdx].first <= _ticks) {
+    while (_frameNdx < _frames.size() && _frames[_frameNdx].first <= _ticks) {
         emit q_ptr->sendFrame(_frames[_frameNdx].second);
         ++_frameNdx;
     }
