@@ -551,6 +551,7 @@ struct {name}GuiImpl : public {name}GuiInt {{
         : _ui(new Ui::{name})
         , _widget(new QWidget)
     {{
+        _ui->setupUi(_widget);
     }}
 
     virtual QWidget* mainWidget()

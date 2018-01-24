@@ -6,9 +6,13 @@
 CanSignalDataPrivate::CanSignalDataPrivate(CanSignalData* q, CanSignalDataCtx&& ctx)
     : _ctx(std::move(ctx))
     , _ui(_ctx.get<CanSignalDataGuiInt>())
+    , _columnsOrder({ "rowID", "id", "name", "start", "length", "step", "offset", "min", "max" })
     , q_ptr(q)
 {
     initProps();
+
+    _tvModel.setHorizontalHeaderLabels(_columnsOrder);
+    _ui.initTableView(_tvModel);
 }
 
 void CanSignalDataPrivate::initProps()
@@ -72,4 +76,23 @@ void CanSignalDataPrivate::loadDbc(const std::string& filename)
     const auto& db = parser.getDb();
 
     cds_info("CAN DB load successful. {} records found", db.messages.size());
+
+    _tvModel.removeRows(0, _tvModel.rowCount());
+    uint32_t rowID = 0;
+
+    for(auto &message : db.messages) {
+        uint32_t id = message.first.id;
+
+        for(auto &signal : message.second) {
+            QList<QStandardItem*> list;
+
+            QString frameID = QString("0x" + QString::number(id, 16));
+
+            list.append(new QStandardItem(QString::number(rowID++)));
+            list.append(new QStandardItem(std::move(frameID)));
+            list.append(new QStandardItem(signal.signal_name.c_str()));
+
+            _tvModel.appendRow(list);
+        }
+    }
 }

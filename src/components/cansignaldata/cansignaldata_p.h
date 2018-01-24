@@ -5,6 +5,7 @@
 #include <memory>
 #include "gui/cansignaldataguiimpl.h"
 #include "cansignaldata.h"
+#include <QStandardItemModel>
 
 class CanSignalData;
 
@@ -29,6 +30,8 @@ public:
     CanSignalDataGuiInt& _ui;
     bool _docked{ true };
     std::map<QString, QVariant> _props;
+    QStringList _columnsOrder;
+    QStandardItemModel _tvModel;
 
 private:
     CanSignalData* q_ptr;

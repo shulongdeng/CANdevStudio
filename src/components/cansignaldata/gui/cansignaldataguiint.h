@@ -5,6 +5,7 @@
 #include <functional>
 
 class QWidget;
+class QAbstractItemModel;
 
 struct CanSignalDataGuiInt {
     virtual ~CanSignalDataGuiInt()
@@ -12,6 +13,7 @@ struct CanSignalDataGuiInt {
     }
 
     virtual QWidget* mainWidget() = 0;
+    virtual void initTableView(QAbstractItemModel& tvModel) = 0;
 };
 
 #endif // CANSIGNALDATAGUIINT_H

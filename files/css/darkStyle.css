@@ -131,7 +131,7 @@ QPushButton#pbStartNew, #pbStartOpen, #close {
     border: 0px;
 }
 
-QWidget#CanRawSenderPrivate, #CanRawViewPrivate {
+QWidget#CanRawSenderPrivate, #CanRawViewPrivat, #CanSignalData {
     background-color: #616161;
 }
 
