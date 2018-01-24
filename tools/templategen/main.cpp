@@ -245,14 +245,24 @@ ComponentInterface::ComponentProperties {name}Private::getSupportedProperties() 
 
 QJsonObject {name}Private::getSettings()
 {{
-    return {{ }};
+    QJsonObject json;
+
+    for (const auto& p : _props) {{
+        json[p.first] = QJsonValue::fromVariant(p.second);
+    }}
+
+    return json;
 }}
 
 void {name}Private::setSettings(const QJsonObject& json)
 {{
-    (void)json;
+    for (const auto& p : _supportedProps) {{
+        if (json.contains(p.first))
+            _props[p.first] = json[p.first].toVariant();
+    }}
 }}
-)", "name"_a = name, "nameLower"_a = str_tolower(name));
+)",
+    "name"_a = name, "nameUpper"_a = str_toupper(name), "nameLower"_a = str_tolower(name));
 }
 
 std::string genGuiCMake(const std::string name)

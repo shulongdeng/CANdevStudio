@@ -1,6 +1,7 @@
 #include "cansignaldata.h"
 #include "cansignaldata_p.h"
 #include <confighelpers.h>
+#include <log.h>
 
 CanSignalData::CanSignalData()
     : d_ptr(new CanSignalDataPrivate(this))
@@ -51,6 +52,11 @@ std::shared_ptr<QObject> CanSignalData::getQConfig() const
 
 void CanSignalData::configChanged()
 {
+    QString fileName = getQConfig()->property("file").toString();
+
+    cds_info("File to open: '{}'", fileName.toStdString());
+
+    d_ptr->loadDbc(fileName.toStdString());
 }
 
 bool CanSignalData::mainWidgetDocked() const

@@ -17,9 +17,11 @@ public:
     ComponentInterface::ComponentProperties getSupportedProperties() const;
     QJsonObject getSettings();
     void setSettings(const QJsonObject& json);
+    void loadDbc(const std::string& filename);
 
 private:
     void initProps();
+    std::string loadFile(const std::string& filename);
 
 public:
     bool _simStarted{ false };
@@ -30,9 +32,11 @@ public:
 
 private:
     CanSignalData* q_ptr;
+    const QString _fileProperty = "file";
     const QString _nameProperty = "name";
     ComponentInterface::ComponentProperties _supportedProps = {
-            {_nameProperty,   {QVariant::String, true}}
+            {_nameProperty,   {QVariant::String, true}},
+            {_fileProperty,   {QVariant::String, true}}
     };
 };
 
