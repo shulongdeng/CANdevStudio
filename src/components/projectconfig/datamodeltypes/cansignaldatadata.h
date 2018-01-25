@@ -6,10 +6,10 @@
 
 using SignalData_t = std::map<CANmessage, std::vector<CANsignal>>;
 
-class CanSignalDataDataIn : public NodeData {
+class CanSignalDataDataOut : public NodeData {
 public:
-    CanSignalDataDataIn(){};
-    CanSignalDataDataIn(const SignalData_t& messages)
+    CanSignalDataDataOut(){};
+    CanSignalDataDataOut(const SignalData_t& messages)
         : _messages(messages)
     {
     }
@@ -27,7 +27,5 @@ public:
 private:
     SignalData_t _messages;
 };
-
-using CanSignalDataDataOut = CanSignalDataDataIn;
 
 #endif // CANSIGNALDATADATA_H

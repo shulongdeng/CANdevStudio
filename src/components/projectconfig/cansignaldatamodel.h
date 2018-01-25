@@ -36,13 +36,13 @@ public:
     }
 
 public slots:
-    void canDbUpdated(const SignalData_t& messages);
+    void canDbUpdated(const CANmessages_t& messages);
 
 signals:
 
 private:
     std::unique_ptr<NodePainter> _painter;
-    SignalData_t _messages;
+    CANmessages_t _messages;
 };
 
 #endif // CANSIGNALDATAMODEL_H

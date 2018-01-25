@@ -5,6 +5,7 @@
 #include "nodepainter.h"
 #include <QtCore/QObject>
 #include <cansignalcoder.h>
+#include <cantypes.hpp>
 
 using QtNodes::NodeData;
 using QtNodes::NodeDataType;
@@ -38,6 +39,7 @@ public:
 public slots:
 
 signals:
+    void canDbUpdated(const CANmessages_t& messages);
 
 private:
     std::unique_ptr<NodePainter> _painter;

@@ -44,7 +44,7 @@ private:
             {_nameProperty,   {QVariant::String, true}},
             {_fileProperty,   {QVariant::String, true}}
     };
-    SignalData_t _canDb;
+    CANmessages_t _canDb;
 };
 
 #endif // CANSIGNALDATA_P_H

@@ -2,6 +2,26 @@
 #include <datamodeltypes/cansignalcoderdata.h>
 #include <log.h>
 
+namespace {
+
+// clang-format off
+const std::map<PortType, std::vector<NodeDataType>> portMappings = {
+    { PortType::In, 
+        {
+            {CanSignalCoderDataIn{}.type() },
+            {CanSignalCoderRawIn{}.type() }
+        }
+    },
+    { PortType::Out, 
+        {
+            {CanSignalCoderRawOut{}.type()}
+        }
+    }
+};
+// clang-format on
+
+} // namespace
+
 CanSignalCoderModel::CanSignalCoderModel()
     : ComponentModel("CanSignalCoder")
     , _painter(std::make_unique<NodePainter>(headerColor1(), headerColor2()))
@@ -9,6 +29,8 @@ CanSignalCoderModel::CanSignalCoderModel()
     _label->setAlignment(Qt::AlignVCenter | Qt::AlignHCenter);
     _label->setFixedSize(75, 25);
     _label->setAttribute(Qt::WA_TranslucentBackground);
+
+    connect(this, &CanSignalCoderModel::canDbUpdated, &_component, &CanSignalCoder::canDbUpdated);
 }
 
 QtNodes::NodePainterDelegate* CanSignalCoderModel::painterDelegate() const
@@ -18,22 +40,18 @@ QtNodes::NodePainterDelegate* CanSignalCoderModel::painterDelegate() const
 
 unsigned int CanSignalCoderModel::nPorts(PortType portType) const
 {
-    // example
-    // assert((PortType::In == portType) || (PortType::Out == portType) || (PortType::None == portType)); // range check
-    // return (PortType::None != portType) ? 1 : 0;
-    (void) portType;
-
-    return { };
+    return portMappings.at(portType).size();
 }
 
-NodeDataType CanSignalCoderModel::dataType(PortType portType, PortIndex) const
+NodeDataType CanSignalCoderModel::dataType(PortType portType, PortIndex ndx) const
 {
-    // example
-    // assert((PortType::In == portType) || (PortType::Out == portType)); // allowed input
-    // return (PortType::Out == portType) ? CanDeviceDataOut{}.type() : CanDeviceDataIn{}.type();
-    (void) portType;
+    if (portMappings.at(portType).size() > static_cast<uint32_t>(ndx)) {
+        return portMappings.at(portType)[ndx];
+    } else {
+        cds_error("No port mapping for ndx: {}", ndx);
 
-    return { };
+        return {};
+    }
 }
 
 std::shared_ptr<NodeData> CanSignalCoderModel::outData(PortIndex)
@@ -41,18 +59,22 @@ std::shared_ptr<NodeData> CanSignalCoderModel::outData(PortIndex)
     // example
     // return std::make_shared<CanDeviceDataOut>(_frame, _direction, _status);
 
-    return { };
+    return {};
 }
 
 void CanSignalCoderModel::setInData(std::shared_ptr<NodeData> nodeData, PortIndex)
 {
-    // example
-    // if (nodeData) {
-    //     auto d = std::dynamic_pointer_cast<CanDeviceDataIn>(nodeData);
-    //     assert(nullptr != d);
-    //     emit sendFrame(d->frame());
-    // } else {
-    //     cds_warn("Incorrect nodeData");
-    // }
-    (void) nodeData;
+    if (nodeData) {
+        if (nodeData->sameType(CanSignalCoderDataIn())) {
+            auto d = std::dynamic_pointer_cast<CanSignalCoderDataIn>(nodeData);
+            assert(nullptr != d);
+
+            emit canDbUpdated(d->messages());
+        } else if (nodeData->sameType(CanSignalCoderRawIn())) {
+            auto d = std::dynamic_pointer_cast<CanSignalCoderRawIn>(nodeData);
+            assert(nullptr != d);
+        } else {
+            cds_warn("Incorrect nodeData");
+        }
+    }
 }

@@ -1,6 +1,7 @@
 #include "cansignalcoder.h"
 #include "cansignalcoder_p.h"
 #include <confighelpers.h>
+#include <log.h>
 
 CanSignalCoder::CanSignalCoder()
     : d_ptr(new CanSignalCoderPrivate(this))
@@ -76,3 +77,11 @@ void CanSignalCoder::startSimulation()
 
     d->_simStarted = true;
 }
+
+void CanSignalCoder::canDbUpdated(const CANmessages_t& messages)
+{
+    for(auto &msg : messages) {
+        cds_info("Msg: {:x}", msg.first.id);
+    }
+}
+

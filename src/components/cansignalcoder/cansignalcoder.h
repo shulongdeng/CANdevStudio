@@ -6,6 +6,7 @@
 #include <componentinterface.h>
 #include <context.h>
 #include <memory>
+#include <cantypes.hpp>
 
 class CanSignalCoderPrivate;
 class QWidget;
@@ -35,6 +36,7 @@ signals:
 public slots:
     void stopSimulation() override;
     void startSimulation() override;
+    void canDbUpdated(const CANmessages_t& messages);
 
 private:
     QScopedPointer<CanSignalCoderPrivate> d_ptr;
