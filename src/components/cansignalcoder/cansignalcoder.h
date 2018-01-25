@@ -34,6 +34,7 @@ public:
 
 signals:
     void mainWidgetDockToggled(QWidget* widget) override;
+    void sendSignal(const QString& name, const QVariant& value);
 
 public slots:
     void stopSimulation() override;

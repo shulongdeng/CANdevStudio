@@ -1,6 +1,7 @@
 #include "cansignalcoder_p.h"
 #include <QCanBusFrame>
 #include <algorithm>
+#include <cmath>
 #include <log.h>
 
 CanSignalCoderPrivate::CanSignalCoderPrivate(CanSignalCoder* q, CanSignalCoderCtx&& ctx)
@@ -53,22 +54,55 @@ void CanSignalCoderPrivate::decodeFrame(const QCanBusFrame& frame)
 
     if (el != _messages.end()) {
         cds_info("Frame '{:x}' exists in DB", el->first.id);
+        bool le = false;
 
-        //for (auto& sig : el->second) {
-            //switch (sig.byteOrder) {
-            //case 0:
-                //// Little endian
-                //int64_t res = processIntegerSignal(frame.payload().constData(), sig.startBit, sig.signalSize, true, 
-                //break;
-            //case 1:
-                //// Big endian
-                //break;
+        for (auto& sig : el->second) {
+            // Check scope
 
-            //default:
-                //cds_error("payload type {} not suppoerted", sig.byteOrder);
-                //break;
-            //}
-        //}
+            if ((sig.startBit >= (frame.payload().size() * 8))
+                || ((sig.startBit + sig.signalSize - 1) >= (frame.payload().size() * 8))) {
+
+                cds_error("Invalid message size - startBit {}, sigSize {}, payload size {}", sig.startBit,
+                    sig.signalSize, frame.payload().size());
+            }
+
+            switch (sig.byteOrder) {
+            case 0:
+                // Little endian
+                le = true;
+                break;
+
+            case 1:
+                // Big endian
+                le = false;
+                break;
+
+            default:
+                cds_error("payload type {} not suppoerted", sig.byteOrder);
+                return;
+            }
+
+            int64_t value = processIntegerSignal(
+                (const uint8_t*)frame.payload().constData(), sig.startBit, sig.signalSize, le, sig.valueSigned);
+            QVariant sigVal;
+
+            if ((std::fmod(sig.factor, 1) == 0.0) && (std::fmod(sig.offset, 1) == 0.0)) {
+                // resulting number will be integer
+                value = value * sig.factor + sig.offset;
+                sigVal.setValue(value);
+            } else {
+                double fValue = value * sig.factor + sig.offset;
+                sigVal.setValue(fValue);
+            }
+
+            QString sigName
+                = fmt::format("0x{:03X}{}_{}", frame.frameId(), frame.hasExtendedFrameFormat() ? "x" : "", sig.signal_name)
+                      .c_str();
+
+            emit q_ptr->sendSignal(sigName, sigVal);
+
+            cds_info("Signal: {}, val: {}", sigName.toStdString(), sigVal.toDouble());
+        }
 
     } else {
         cds_info("Frame '{:x}' does not exist in DB", frame.frameId());
