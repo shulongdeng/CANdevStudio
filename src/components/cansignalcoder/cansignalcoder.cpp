@@ -2,6 +2,7 @@
 #include "cansignalcoder_p.h"
 #include <confighelpers.h>
 #include <log.h>
+#include <QCanBusFrame>
 
 CanSignalCoder::CanSignalCoder()
     : d_ptr(new CanSignalCoderPrivate(this))
@@ -80,8 +81,11 @@ void CanSignalCoder::startSimulation()
 
 void CanSignalCoder::canDbUpdated(const CANmessages_t& messages)
 {
-    for(auto &msg : messages) {
-        cds_info("Msg: {:x}", msg.first.id);
-    }
+    d_ptr->_messages = messages;
+}
+
+void CanSignalCoder::frameReceived(const QCanBusFrame& frame)
+{
+    d_ptr->decodeFrame(frame);    
 }
 

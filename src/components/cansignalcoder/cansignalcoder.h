@@ -12,6 +12,8 @@ class CanSignalCoderPrivate;
 class QWidget;
 typedef Context<> CanSignalCoderCtx;
 
+class QCanBusFrame;
+
 class CanSignalCoder : public QObject, public ComponentInterface {
     Q_OBJECT
     Q_DECLARE_PRIVATE(CanSignalCoder)
@@ -37,6 +39,7 @@ public slots:
     void stopSimulation() override;
     void startSimulation() override;
     void canDbUpdated(const CANmessages_t& messages);
+    void frameReceived(const QCanBusFrame& frame);
 
 private:
     QScopedPointer<CanSignalCoderPrivate> d_ptr;

@@ -9,12 +9,14 @@ const std::map<PortType, std::vector<NodeDataType>> portMappings = {
     { PortType::In, 
         {
             {CanSignalCoderDataIn{}.type() },
+            {CanSignalCoderSignalIn{}.type() },
             {CanSignalCoderRawIn{}.type() }
         }
     },
     { PortType::Out, 
         {
-            {CanSignalCoderRawOut{}.type()}
+            {CanSignalCoderSignalOut{}.type()}, 
+            {CanSignalCoderRawOut{}.type() }
         }
     }
 };
@@ -31,6 +33,7 @@ CanSignalCoderModel::CanSignalCoderModel()
     _label->setAttribute(Qt::WA_TranslucentBackground);
 
     connect(this, &CanSignalCoderModel::canDbUpdated, &_component, &CanSignalCoder::canDbUpdated);
+    connect(this, &CanSignalCoderModel::frameReceived, &_component, &CanSignalCoder::frameReceived);
 }
 
 QtNodes::NodePainterDelegate* CanSignalCoderModel::painterDelegate() const
@@ -73,6 +76,8 @@ void CanSignalCoderModel::setInData(std::shared_ptr<NodeData> nodeData, PortInde
         } else if (nodeData->sameType(CanSignalCoderRawIn())) {
             auto d = std::dynamic_pointer_cast<CanSignalCoderRawIn>(nodeData);
             assert(nullptr != d);
+
+            emit frameReceived(d->frame());
         } else {
             cds_warn("Incorrect nodeData");
         }

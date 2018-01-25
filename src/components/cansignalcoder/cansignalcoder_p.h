@@ -16,9 +16,12 @@ public:
     ComponentInterface::ComponentProperties getSupportedProperties() const;
     QJsonObject getSettings();
     void setSettings(const QJsonObject& json);
+    void decodeFrame(const QCanBusFrame& frame);
 
 private:
     void initProps();
+    std::pair<QString, QVariant> decodeLeSignal(const CANsignal& sig, const QCanBusFrame& frame);
+    std::pair<QString, QVariant> decodeBeSignal(const CANsignal& sig, const QCanBusFrame& frame);
 
 public:
     bool _simStarted{ false };
@@ -27,6 +30,7 @@ public:
 
 private:
     CanSignalCoder* q_ptr;
+    CANmessages_t _messages;
     const QString _nameProperty = "name";
     ComponentInterface::ComponentProperties _supportedProps = {
             {_nameProperty,   {QVariant::String, true}}

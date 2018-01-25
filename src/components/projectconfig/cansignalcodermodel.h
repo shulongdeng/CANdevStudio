@@ -12,6 +12,8 @@ using QtNodes::NodeDataType;
 using QtNodes::PortIndex;
 using QtNodes::PortType;
 
+struct QCanBusFrame;
+
 enum class Direction;
 
 class CanSignalCoderModel : public ComponentModel<CanSignalCoder, CanSignalCoderModel> {
@@ -40,6 +42,7 @@ public slots:
 
 signals:
     void canDbUpdated(const CANmessages_t& messages);
+    void frameReceived(const QCanBusFrame& frame);
 
 private:
     std::unique_ptr<NodePainter> _painter;

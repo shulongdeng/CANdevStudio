@@ -27,13 +27,16 @@ unsigned int CanDeviceModel::nPorts(PortType portType) const
 {
     assert((PortType::In == portType) || (PortType::Out == portType) || (PortType::None == portType)); // range check
 
-    return (PortType::None != portType) ? 1 : 0;
+    return (PortType::None != portType) ? 3 : 0;
 }
 
 void CanDeviceModel::frameOnQueue()
 {
     std::tie(_frame, _direction, _status) = _frameQueue.takeFirst();
+
     emit dataUpdated(0); // Data ready on port 0
+    emit dataUpdated(1); // Data ready on port 0
+    emit dataUpdated(2); // Data ready on port 0
 }
 
 void CanDeviceModel::frameReceived(const QCanBusFrame& frame)
