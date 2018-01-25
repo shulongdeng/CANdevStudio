@@ -14,17 +14,52 @@ struct CanSignalDataGuiImpl : public CanSignalDataGuiInt {
         _widget->setMinimumSize(_ui->tv->minimumSize());
     }
 
+    virtual void setDockUndockCbk(const dockUndock_t& cb) override
+    {
+        QObject::connect(_ui->pbDockUndock, &QPushButton::toggled, cb);
+    }
+
+    virtual void setSettingsCbk(const settings_t& cb) override 
+    {
+        QObject::connect(_ui->pbSettings, &QPushButton::toggled, cb);
+    }
+
     virtual QWidget* mainWidget() override
     {
         return _widget;
     }
 
+    virtual void initSettings(QAbstractItemModel& tvModel) override
+    {
+        if(_settingsState.size() > 0) {
+            _ui->tv->horizontalHeader()->restoreState(_settingsState);
+        }
+        
+        _ui->tv->setModel(&tvModel);
+        _ui->tv->horizontalHeader()->setSectionsMovable(true);
+        _ui->tv->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Stretch);
+        _ui->tv->horizontalHeader()->setSectionResizeMode(2, QHeaderView::ResizeToContents);
+        _ui->tv->horizontalHeader()->setSectionResizeMode(5, QHeaderView::Stretch);
+        _ui->tv->setColumnHidden(0, false);
+
+        _settingsState = _ui->tv->horizontalHeader()->saveState();
+    }
+
     virtual void initTableView(QAbstractItemModel& tvModel) override
     {
+        if(_tableState.size() > 0) {
+            _ui->tv->horizontalHeader()->restoreState(_tableState);
+        }
+
         _ui->tv->setModel(&tvModel);
         _ui->tv->horizontalHeader()->setSectionsMovable(true);
         _ui->tv->horizontalHeader()->setSortIndicator(0, Qt::AscendingOrder);
+        _ui->tv->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Interactive);
+        _ui->tv->horizontalHeader()->setSectionResizeMode(2, QHeaderView::Stretch);
+        _ui->tv->horizontalHeader()->setSectionResizeMode(5, QHeaderView::Interactive);
         _ui->tv->setColumnHidden(0, true);
+
+        _tableState = _ui->tv->horizontalHeader()->saveState();
 
         //tvModel.setHeaderData(0, Qt::Horizontal, QVariant::fromValue(CRV_ColType::uint_type), Qt::UserRole); // rowID
         //tvModel.setHeaderData(1, Qt::Horizontal, QVariant::fromValue(CRV_ColType::double_type), Qt::UserRole); // time
@@ -38,6 +73,8 @@ struct CanSignalDataGuiImpl : public CanSignalDataGuiInt {
 private:
     Ui::CanSignalData* _ui;
     QWidget* _widget;
+    QByteArray _settingsState;
+    QByteArray _tableState;
 };
 
 #endif // CANSIGNALDATAGUIIMPL_H

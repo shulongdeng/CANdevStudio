@@ -131,7 +131,7 @@ QPushButton#pbStartNew, #pbStartOpen, #close {
     border: 0px;
 }
 
-QWidget#CanRawSenderPrivate, #CanRawViewPrivat, #CanSignalData {
+QWidget#CanRawSenderPrivate, #CanRawViewPrivate, #CanSignalData {
     background-color: #616161;
 }
 
@@ -172,7 +172,7 @@ QWidget#startScreen {
     image: url(:/images/files/images/dark/start_screen.png);
 }
 
-QWidget#rawWidget, #deviceWidget {
+QWidget#rawWidget, #deviceWidget, #signalWidget {
     background: #282828;
 }
 
@@ -242,4 +242,8 @@ QCheckBox::indicator:unchecked:disabled {
 
 QCheckBox::indicator:checked:disabled {
     image: url(:/images/files/images/dark/CANbus_icon_CheckBoxOn_disabled.svg);
+}
+
+QLabel[type="IconLabel"] {
+    background: #282828;
 }

@@ -115,6 +115,10 @@ public:
 
         if (!iface.restored()) {
             iface.setCaption(node.nodeDataModel()->caption() + " #" + QString::number(_nodeCnt));
+        } else {
+            // For some reason QWidget title is being set to name instead of caption. 
+            // TODO: investigate why
+            iface.setCaption(node.nodeDataModel()->caption());
         }
 
         node.nodeGraphicsObject().setOpacity(node.nodeDataModel()->nodeStyle().Opacity);

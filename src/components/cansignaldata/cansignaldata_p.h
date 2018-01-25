@@ -29,9 +29,12 @@ public:
     CanSignalDataCtx _ctx;
     CanSignalDataGuiInt& _ui;
     bool _docked{ true };
+    bool _settings{ false };
     std::map<QString, QVariant> _props;
     QStringList _columnsOrder;
+    QStringList _columnsSettings;
     QStandardItemModel _tvModel;
+    QStandardItemModel _tvModelSettings;
 
 private:
     CanSignalData* q_ptr;
@@ -41,6 +44,7 @@ private:
             {_nameProperty,   {QVariant::String, true}},
             {_fileProperty,   {QVariant::String, true}}
     };
+    SignalData_t _canDb;
 };
 
 #endif // CANSIGNALDATA_P_H

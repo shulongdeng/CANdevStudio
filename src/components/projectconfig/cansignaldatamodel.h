@@ -22,7 +22,7 @@ public:
     unsigned int nPorts(PortType portType) const override;
     NodeDataType dataType(PortType portType, PortIndex portIndex) const override;
     std::shared_ptr<NodeData> outData(PortIndex port) override;
-    void setInData(std::shared_ptr<NodeData> nodeData, PortIndex port) override;
+    void setInData(std::shared_ptr<NodeData>, PortIndex) override {}
     QtNodes::NodePainterDelegate* painterDelegate() const override;
 
     static QColor headerColor1()
@@ -36,11 +36,13 @@ public:
     }
 
 public slots:
+    void canDbUpdated(const SignalData_t& messages);
 
 signals:
 
 private:
     std::unique_ptr<NodePainter> _painter;
+    SignalData_t _messages;
 };
 
 #endif // CANSIGNALDATAMODEL_H

@@ -166,11 +166,7 @@ QCheckBox[type="iconSection"]::indicator:unchecked {
     image: url(:/images/files/images/light/Angle-up-01.svg);
 }
 
-QWidget#deviceWidget {
-    background: #dcdcdc;
-}
-
-QWidget#rawWidget {
+QWidget#deviceWidget, #rawWidget, #signalWidget {
     background: #dcdcdc;
 }
 

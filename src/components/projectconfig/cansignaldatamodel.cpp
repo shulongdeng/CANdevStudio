@@ -9,6 +9,8 @@ CanSignalDataModel::CanSignalDataModel()
     _label->setAlignment(Qt::AlignVCenter | Qt::AlignHCenter);
     _label->setFixedSize(75, 25);
     _label->setAttribute(Qt::WA_TranslucentBackground);
+
+    connect(&_component, &CanSignalData::canDbUpdated, this, &CanSignalDataModel::canDbUpdated);
 }
 
 QtNodes::NodePainterDelegate* CanSignalDataModel::painterDelegate() const
@@ -18,41 +20,27 @@ QtNodes::NodePainterDelegate* CanSignalDataModel::painterDelegate() const
 
 unsigned int CanSignalDataModel::nPorts(PortType portType) const
 {
-    // example
-    // assert((PortType::In == portType) || (PortType::Out == portType) || (PortType::None == portType)); // range check
-    // return (PortType::None != portType) ? 1 : 0;
-    (void) portType;
-
-    return 2;
+    return (PortType::Out == portType) ? 3 : 0;
 }
 
-NodeDataType CanSignalDataModel::dataType(PortType portType, PortIndex) const
+NodeDataType CanSignalDataModel::dataType(PortType, PortIndex) const
 {
-    // example
-    // assert((PortType::In == portType) || (PortType::Out == portType)); // allowed input
-    // return (PortType::Out == portType) ? CanDeviceDataOut{}.type() : CanDeviceDataIn{}.type();
-    (void) portType;
-
-    return { };
+    return CanSignalDataDataOut{}.type();
 }
 
 std::shared_ptr<NodeData> CanSignalDataModel::outData(PortIndex)
 {
-    // example
-    // return std::make_shared<CanDeviceDataOut>(_frame, _direction, _status);
-
-    return { };
+    return std::make_shared<CanSignalDataDataOut>(_messages);
 }
 
-void CanSignalDataModel::setInData(std::shared_ptr<NodeData> nodeData, PortIndex)
+void CanSignalDataModel::canDbUpdated(const SignalData_t& messages)
 {
-    // example
-    // if (nodeData) {
-    //     auto d = std::dynamic_pointer_cast<CanDeviceDataIn>(nodeData);
-    //     assert(nullptr != d);
-    //     emit sendFrame(d->frame());
-    // } else {
-    //     cds_warn("Incorrect nodeData");
-    // }
-    (void) nodeData;
+    const auto portCnt = nPorts(PortType::Out);
+
+    _messages = messages;
+
+    for(uint32_t i; i < portCnt; ++i) {
+        emit dataUpdated(i); // Data ready on port 0
+    } 
 }
+

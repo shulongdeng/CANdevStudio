@@ -6,11 +6,14 @@
 #include <componentinterface.h>
 #include <context.h>
 #include <memory>
+#include <cantypes.hpp>
 
 class CanSignalDataPrivate;
 class QWidget;
 struct CanSignalDataGuiInt;
 typedef Context<CanSignalDataGuiInt> CanSignalDataCtx;
+
+using SignalData_t = std::map<CANmessage, std::vector<CANsignal>>;
 
 class CanSignalData : public QObject, public ComponentInterface {
     Q_OBJECT
@@ -32,6 +35,7 @@ public:
 
 signals:
     void mainWidgetDockToggled(QWidget* widget) override;
+    void canDbUpdated(const SignalData_t& messages);
 
 public slots:
     void stopSimulation() override;
