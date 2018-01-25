@@ -20,8 +20,7 @@ public:
 
 private:
     void initProps();
-    std::pair<QString, QVariant> decodeLeSignal(const CANsignal& sig, const QCanBusFrame& frame);
-    std::pair<QString, QVariant> decodeBeSignal(const CANsignal& sig, const QCanBusFrame& frame);
+    int64_t processIntegerSignal(const uint8_t *data, int startBit, int sigSize, bool littleEndian, bool isSigned);
 
 public:
     bool _simStarted{ false };
