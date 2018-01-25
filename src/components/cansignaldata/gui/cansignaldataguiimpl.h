@@ -7,7 +7,7 @@
 
 struct CanSignalDataGuiImpl : public CanSignalDataGuiInt {
     CanSignalDataGuiImpl()
-        : _ui(new Ui::CanSignalData)
+        : _ui(new Ui::CanSignalDataPrivate)
         , _widget(new QWidget)
     {
         _ui->setupUi(_widget);
@@ -71,7 +71,7 @@ struct CanSignalDataGuiImpl : public CanSignalDataGuiInt {
 
 
 private:
-    Ui::CanSignalData* _ui;
+    Ui::CanSignalDataPrivate* _ui;
     QWidget* _widget;
     QByteArray _settingsState;
     QByteArray _tableState;
