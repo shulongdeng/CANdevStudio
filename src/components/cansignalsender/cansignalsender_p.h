@@ -5,6 +5,8 @@
 #include <memory>
 #include "gui/cansignalsenderguiimpl.h"
 #include "cansignalsender.h"
+#include <QStandardItemModel>
+#include <cantypes.hpp>
 
 class CanSignalSender;
 
@@ -18,6 +20,9 @@ public:
     QJsonObject getSettings();
     void setSettings(const QJsonObject& json);
 
+public slots:
+    void canDbUpdated(const CANmessages_t& messages);
+
 private:
     void initProps();
 
@@ -29,7 +34,10 @@ public:
     std::map<QString, QVariant> _props;
 
 private:
+    QStandardItemModel _tvModel;
+    QStringList _tvColumns;
     CanSignalSender* q_ptr;
+    CANmessages_t _messages;
     const QString _nameProperty = "name";
     ComponentInterface::ComponentProperties _supportedProps = {
             {_nameProperty,   {QVariant::String, true}}

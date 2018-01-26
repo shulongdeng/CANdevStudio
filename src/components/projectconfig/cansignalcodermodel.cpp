@@ -50,11 +50,10 @@ NodeDataType CanSignalCoderModel::dataType(PortType portType, PortIndex ndx) con
 {
     if (portMappings.at(portType).size() > static_cast<uint32_t>(ndx)) {
         return portMappings.at(portType)[ndx];
-    } else {
-        cds_error("No port mapping for ndx: {}", ndx);
-
-        return {};
     }
+        
+    cds_error("No port mapping for ndx: {}", ndx);
+    return {};
 }
 
 std::shared_ptr<NodeData> CanSignalCoderModel::outData(PortIndex)

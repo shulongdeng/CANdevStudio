@@ -5,6 +5,7 @@
 #include <functional>
 
 class QWidget;
+class QAbstractItemModel;
 
 struct CanSignalSenderGuiInt {
     virtual ~CanSignalSenderGuiInt()
@@ -12,6 +13,7 @@ struct CanSignalSenderGuiInt {
     }
 
     virtual QWidget* mainWidget() = 0;
+    virtual void initTv(QAbstractItemModel& tvModel) = 0;
 };
 
 #endif // CANSIGNALSENDERGUIINT_H

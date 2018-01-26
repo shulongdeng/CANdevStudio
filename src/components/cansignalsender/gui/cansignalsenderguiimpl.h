@@ -7,7 +7,7 @@
 
 struct CanSignalSenderGuiImpl : public CanSignalSenderGuiInt {
     CanSignalSenderGuiImpl()
-        : _ui(new Ui::CanSignalSender)
+        : _ui(new Ui::CanSignalSenderPrivate)
         , _widget(new QWidget)
     {
         _ui->setupUi(_widget);
@@ -18,8 +18,17 @@ struct CanSignalSenderGuiImpl : public CanSignalSenderGuiInt {
         return _widget;
     }
 
+    virtual void initTv(QAbstractItemModel& tvModel) override
+    {
+        _ui->tv->setModel(&tvModel);
+        _ui->tv->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Stretch);
+        _ui->tv->horizontalHeader()->setSectionResizeMode(2, QHeaderView::Stretch);
+        _ui->tv->horizontalHeader()->setSectionsMovable(true);
+    }
+
+
 private:
-    Ui::CanSignalSender* _ui;
+    Ui::CanSignalSenderPrivate* _ui;
     QWidget* _widget;
 };
 

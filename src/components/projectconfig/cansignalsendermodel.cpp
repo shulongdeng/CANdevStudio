@@ -2,6 +2,28 @@
 #include <datamodeltypes/cansignalsenderdata.h>
 #include <log.h>
 
+namespace {
+
+// clang-format off
+const std::map<PortType, std::vector<NodeDataType>> portMappings = {
+    { PortType::In, 
+        {
+            //{CanSignalCoderDataIn{}.type() },
+            //{CanSignalCoderSignalIn{}.type() },
+            //{CanSignalCoderRawIn{}.type() }
+        }
+    },
+    { PortType::Out, 
+        {
+            //{CanSignalCoderSignalOut{}.type()}, 
+            //{CanSignalCoderRawOut{}.type() }
+        }
+    }
+};
+// clang-format on
+
+} // namespace
+
 CanSignalSenderModel::CanSignalSenderModel()
     : ComponentModel("CanSignalSender")
     , _painter(std::make_unique<NodePainter>(headerColor1(), headerColor2()))
@@ -18,22 +40,17 @@ QtNodes::NodePainterDelegate* CanSignalSenderModel::painterDelegate() const
 
 unsigned int CanSignalSenderModel::nPorts(PortType portType) const
 {
-    // example
-    // assert((PortType::In == portType) || (PortType::Out == portType) || (PortType::None == portType)); // range check
-    // return (PortType::None != portType) ? 1 : 0;
-    (void) portType;
-
-    return { };
+    return portMappings.at(portType).size();
 }
 
-NodeDataType CanSignalSenderModel::dataType(PortType portType, PortIndex) const
+NodeDataType CanSignalSenderModel::dataType(PortType portType, PortIndex ndx) const
 {
-    // example
-    // assert((PortType::In == portType) || (PortType::Out == portType)); // allowed input
-    // return (PortType::Out == portType) ? CanDeviceDataOut{}.type() : CanDeviceDataIn{}.type();
-    (void) portType;
+    if (portMappings.at(portType).size() > static_cast<uint32_t>(ndx)) {
+        return portMappings.at(portType)[ndx];
+    }
 
-    return { };
+    cds_error("No port mapping for ndx: {}", ndx);
+    return {};
 }
 
 std::shared_ptr<NodeData> CanSignalSenderModel::outData(PortIndex)
@@ -41,7 +58,7 @@ std::shared_ptr<NodeData> CanSignalSenderModel::outData(PortIndex)
     // example
     // return std::make_shared<CanDeviceDataOut>(_frame, _direction, _status);
 
-    return { };
+    return {};
 }
 
 void CanSignalSenderModel::setInData(std::shared_ptr<NodeData> nodeData, PortIndex)
@@ -54,5 +71,5 @@ void CanSignalSenderModel::setInData(std::shared_ptr<NodeData> nodeData, PortInd
     // } else {
     //     cds_warn("Incorrect nodeData");
     // }
-    (void) nodeData;
+    (void)nodeData;
 }

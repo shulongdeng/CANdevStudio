@@ -94,6 +94,7 @@ std::string genComponentSrc(const std::string& name)
     return fmt::format(R"(#include "{nameLower}.h"
 #include "{nameLower}_p.h"
 #include <confighelpers.h>
+#include <log.h>
 
 {name}::{name}()
     : d_ptr(new {name}Private(this))
@@ -222,6 +223,7 @@ std::string genPrivateSrc(const std::string& name)
     using namespace fmt::literals;
 
     return fmt::format(R"(#include "{nameLower}_p.h"
+#include <log.h>
 
 {name}Private::{name}Private({name} *q, {name}Ctx&& ctx)
     : _ctx(std::move(ctx))
@@ -346,6 +348,7 @@ std::string genGuiComponentSrc(const std::string& name)
     return fmt::format(R"(#include "{nameLower}.h"
 #include "{nameLower}_p.h"
 #include <confighelpers.h>
+#include <log.h>
 
 {name}::{name}()
     : d_ptr(new {name}Private(this))
@@ -477,6 +480,7 @@ std::string genGuiPrivateSrc(const std::string& name)
     using namespace fmt::literals;
 
     return fmt::format(R"(#include "{nameLower}_p.h"
+#include <log.h>
 
 {name}Private::{name}Private({name} *q, {name}Ctx&& ctx)
     : _ctx(std::move(ctx))
@@ -657,6 +661,28 @@ std::string genDataModelSrc(const std::string& name)
 #include <datamodeltypes/{nameLower}data.h>
 #include <log.h>
 
+namespace {{
+
+// clang-format off
+const std::map<PortType, std::vector<NodeDataType>> portMappings = {{
+    {{ PortType::In, 
+        {{
+            //{{CanSignalCoderDataIn{}.type() }},
+            //{{CanSignalCoderSignalIn{}.type() }},
+            //{{CanSignalCoderRawIn{}.type() }}
+        }}
+    }},
+    {{ PortType::Out, 
+        {{
+            //{{CanSignalCoderSignalOut{}.type()}}, 
+            //{{CanSignalCoderRawOut{}.type() }}
+        }}
+    }}
+}};
+// clang-format on
+
+}} // namespace
+
 {name}Model::{name}Model()
     : ComponentModel("{name}")
     , _painter(std::make_unique<NodePainter>(headerColor1(), headerColor2()))
@@ -673,22 +699,17 @@ QtNodes::NodePainterDelegate* {name}Model::painterDelegate() const
 
 unsigned int {name}Model::nPorts(PortType portType) const
 {{
-    // example
-    // assert((PortType::In == portType) || (PortType::Out == portType) || (PortType::None == portType)); // range check
-    // return (PortType::None != portType) ? 1 : 0;
-    (void) portType;
-
-    return {{ }};
+    return portMappings.at(portType).size();
 }}
 
 NodeDataType {name}Model::dataType(PortType portType, PortIndex) const
 {{
-    // example
-    // assert((PortType::In == portType) || (PortType::Out == portType)); // allowed input
-    // return (PortType::Out == portType) ? CanDeviceDataOut{{}}.type() : CanDeviceDataIn{{}}.type();
-    (void) portType;
+    if (portMappings.at(portType).size() > static_cast<uint32_t>(ndx)) {
+        return portMappings.at(portType)[ndx];
+    }
 
-    return {{ }};
+    cds_error("No port mapping for ndx: {}", ndx);
+    return {};
 }}
 
 std::shared_ptr<NodeData> {name}Model::outData(PortIndex)

@@ -34,6 +34,7 @@ void DragWidget::mousePressEvent(QMouseEvent *event)
        el->objectName() != "CanRawView" &&
        el->objectName() != "CanRawPlayer" &&
        el->objectName() != "CanSignalCoder" &&
+       el->objectName() != "CanSignalSender" &&
        el->objectName() != "CanSignalData")
     {
         cds_debug("Dragging disabled for {}", el->objectName().toStdString());
