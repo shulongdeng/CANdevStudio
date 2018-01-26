@@ -8,6 +8,7 @@
 #include <QStandardItemModel>
 #include <QWidget>
 #include <log.h>
+#include <QJsonObject>
 
 struct CanSignalSenderGuiImpl : public CanSignalSenderGuiInt {
     CanSignalSenderGuiImpl()
@@ -22,13 +23,15 @@ struct CanSignalSenderGuiImpl : public CanSignalSenderGuiInt {
         return _widget;
     }
 
-    virtual void initTv(QStandardItemModel& tvModel) override
+    virtual void initTv(QStandardItemModel& tvModel, std::map<uint32_t, QStringList>& sigNames) override
     {
         _model = &tvModel;
         _ui->tv->setModel((QAbstractItemModel*)&tvModel);
         _ui->tv->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Stretch);
         _ui->tv->horizontalHeader()->setSectionResizeMode(2, QHeaderView::Stretch);
         _ui->tv->horizontalHeader()->setSectionsMovable(true);
+
+        _sigNames = &sigNames;
     }
 
     virtual void setDockUndockCbk(const dockUndock_t& cb) override
@@ -46,13 +49,27 @@ struct CanSignalSenderGuiImpl : public CanSignalSenderGuiInt {
         _sendCbk = cbk;
     }
 
-    virtual void addRow(const std::map<uint32_t, QStringList>& sigNames) override
+    virtual void setRemoveCbk(const remove_t& cb) override
     {
-        _sigNames = &sigNames;
+        QObject::connect(_ui->pbRemove, &QPushButton::pressed, cb);
+    }
+
+    virtual void addRow(const QString& id = "", const QString& sig = "", const QString& val = "") override
+    {
+        // It seems that QItemDelegate should be used here instead
+
 
         if (!_model) {
             cds_error("_model is NULL");
             return;
+        }
+
+        if(id.length() > 0 && sig.length() > 0) {
+            // Hack to allow set ComboBox before _sigNames gets populated
+            uint32_t numId = id.toUInt(nullptr, 16);
+            if(!(*_sigNames)[numId].contains(sig)) {
+                (*_sigNames)[numId].append(sig);
+            }
         }
 
         QList<QStandardItem*> list{ new QStandardItem(), new QStandardItem(), new QStandardItem() };
@@ -64,8 +81,10 @@ struct CanSignalSenderGuiImpl : public CanSignalSenderGuiInt {
         bt->setFlat(true);
 
         QComboBox* sigCmb = new QComboBox();
+        sigCmb->setProperty("type", "nlmItem");
 
         QComboBox* idCmb = new QComboBox();
+        idCmb->setProperty("type", "nlmItem");
 
         QObject::connect(idCmb, &QComboBox::currentTextChanged, [this, sigCmb](const QString& text) {
             uint32_t id = text.toUInt(nullptr, 16);
@@ -78,11 +97,12 @@ struct CanSignalSenderGuiImpl : public CanSignalSenderGuiInt {
             }
         });
 
-        for (const auto& msg : sigNames) {
+        for (const auto& msg : *_sigNames) {
             idCmb->addItem(fmt::format("0x{:03x}", msg.first).c_str());
         }
 
         QLineEdit* le = new QLineEdit();
+        le->setProperty("type", "nlmItem");
 
         QObject::connect(bt, &QPushButton::pressed, [idCmb, sigCmb, le, this] {
             if (_sendCbk) {
@@ -105,12 +125,44 @@ struct CanSignalSenderGuiImpl : public CanSignalSenderGuiInt {
 
         auto pbNdx = _model->index(_model->rowCount() - 1, _model->columnCount() - 1);
         _ui->tv->setIndexWidget(pbNdx, bt);
+        
+        if(id.length() > 0 && sig.length() > 0) {
+            idCmb->setCurrentText(id);
+            sigCmb->setCurrentText(sig);
+        }
+
+        le->setText(val);
+    }
+
+    QJsonArray getRows() override
+    {
+        QJsonArray ret;
+        QJsonObject item;
+
+        for(int i = 0; i < _model->rowCount(); ++i) {
+            auto id = reinterpret_cast<QComboBox *>(_ui->tv->indexWidget(_model->index(i, 0)));
+            auto sig = reinterpret_cast<QComboBox *>(_ui->tv->indexWidget(_model->index(i, 1)));
+            auto val = reinterpret_cast<QLineEdit *>(_ui->tv->indexWidget(_model->index(i, 2)));
+
+            item["id"] = id->currentText();
+            item["sig"] = sig->currentText();
+            item["val"] = val->text();
+
+            ret.append(item);
+        }
+
+        return ret;
+    }
+
+    QModelIndexList getSelectedRows() override
+    {
+        return _ui->tv->selectionModel()->selectedRows();
     }
 
 private:
     send_t _sendCbk{ nullptr };
     QStandardItemModel* _model;
-    const std::map<uint32_t, QStringList>* _sigNames;
+    std::map<uint32_t, QStringList>* _sigNames;
     Ui::CanSignalSenderPrivate* _ui;
     QWidget* _widget;
 };
