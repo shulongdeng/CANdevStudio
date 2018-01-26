@@ -1,10 +1,11 @@
-#ifndef CANSIGNALDECODERMODEL_H
-#define CANSIGNALDECODERMODEL_H
+#ifndef CANSIGNALENCODERMODEL_H
+#define CANSIGNALENCODERMODEL_H
 
 #include "componentmodel.h"
 #include "nodepainter.h"
 #include <QtCore/QObject>
-#include <cansignaldecoder.h>
+#include <cansignalencoder.h>
+#include <QCanBusFrame>
 #include <cantypes.hpp>
 
 using QtNodes::NodeData;
@@ -13,13 +14,12 @@ using QtNodes::PortIndex;
 using QtNodes::PortType;
 
 enum class Direction;
-class QCanBusFrame;
 
-class CanSignalDecoderModel : public ComponentModel<CanSignalDecoder, CanSignalDecoderModel> {
+class CanSignalEncoderModel : public ComponentModel<CanSignalEncoder, CanSignalEncoderModel> {
     Q_OBJECT
 
 public:
-    CanSignalDecoderModel();
+    CanSignalEncoderModel();
 
     unsigned int nPorts(PortType portType) const override;
     NodeDataType dataType(PortType portType, PortIndex portIndex) const override;
@@ -38,13 +38,15 @@ public:
     }
 
 public slots:
+    void sendFrame(const QCanBusFrame& frame);
 
 signals:
     void canDbUpdated(const CANmessages_t& messages);
-    void frameReceived(const QCanBusFrame& frame);
+    void signalReceived(const QString& name, const QVariant& val);
 
 private:
+    QCanBusFrame _frame;
     std::unique_ptr<NodePainter> _painter;
 };
 
-#endif // CANSIGNALDECODERMODEL_H
+#endif // CANSIGNALENCODERMODEL_H

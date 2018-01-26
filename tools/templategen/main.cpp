@@ -633,7 +633,7 @@ public:
 
     static QColor headerColor1()
     {{
-        return QColor(245, 170, 27);
+        return QColor(85, 95, 195);
     }}
 
     static QColor headerColor2()

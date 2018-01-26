@@ -2,11 +2,10 @@
 #define CANSIGNALDECODERDATA_H
 
 #include "candevicedata.h"
-#include "cansignaldatadata.h"
-#include "cansignalcoderdata.h"
+#include "cansignalencoderdata.h"
 
 using CanSignalDecoderRawIn = CanDeviceDataOut;
 using CanSignalDecoderDataIn = CanSignalDataDataOut;
-using CanSignalDecoderSignalOut = CanSignalCoderSignalOut;
+using CanSignalDecoderSignalOut = CanSignalEncoderSignalIn;
 
 #endif // CANSIGNALDECODERDATA_H

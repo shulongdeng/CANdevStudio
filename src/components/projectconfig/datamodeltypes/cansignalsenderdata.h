@@ -1,9 +1,9 @@
 #ifndef CANSIGNALSENDERDATA_H
 #define CANSIGNALSENDERDATA_H
 
-#include "cansignalcoderdata.h"
+#include "cansignalencoderdata.h"
 
 using CanSignalSenderDataIn = CanSignalDataDataOut;
-using CanSignalSenderSignalOut = CanSignalCoderSignalIn;
+using CanSignalSenderSignalOut = CanSignalEncoderSignalIn;
 
 #endif // CANSIGNALSENDERDATA_H

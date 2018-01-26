@@ -66,12 +66,12 @@ void CanSignalDecoderModel::setInData(std::shared_ptr<NodeData> nodeData, PortIn
 {
     if (nodeData) {
         if (nodeData->sameType(CanSignalDecoderDataIn())) {
-            auto d = std::dynamic_pointer_cast<CanSignalCoderDataIn>(nodeData);
+            auto d = std::dynamic_pointer_cast<CanSignalDecoderDataIn>(nodeData);
             assert(nullptr != d);
 
             emit canDbUpdated(d->messages());
         } else if (nodeData->sameType(CanSignalDecoderRawIn())) {
-            auto d = std::dynamic_pointer_cast<CanSignalCoderRawIn>(nodeData);
+            auto d = std::dynamic_pointer_cast<CanSignalDecoderRawIn>(nodeData);
             assert(nullptr != d);
 
             // We are interested in RX frames only!
