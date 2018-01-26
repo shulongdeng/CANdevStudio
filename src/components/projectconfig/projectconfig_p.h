@@ -5,7 +5,6 @@
 #include "canrawviewmodel.h"
 #include "canrawplayermodel.h"
 #include "cansignaldatamodel.h"
-#include "cansignalcodermodel.h"
 #include "cansignaldecodermodel.h"
 #include "cansignalencodermodel.h"
 #include "cansignalsendermodel.h"
@@ -42,7 +41,6 @@ public:
         modelRegistry.registerModel<CanRawViewModel>();
         modelRegistry.registerModel<CanRawPlayerModel>();
         modelRegistry.registerModel<CanSignalDataModel>();
-        modelRegistry.registerModel<CanSignalCoderModel>();
         modelRegistry.registerModel<CanSignalSenderModel>();
         modelRegistry.registerModel<CanSignalDecoderModel>();
         modelRegistry.registerModel<CanSignalEncoderModel>();
@@ -96,7 +94,6 @@ public:
         _ui->signalWidget->layout()->addWidget(new IconLabel("CanSignalData", CanSignalDataModel::headerColor1(), CanSignalDataModel::headerColor2(), bgColor));
         _ui->signalWidget->layout()->addWidget(new IconLabel("CanSignalDecoder", CanSignalDecoderModel::headerColor1(), CanSignalDecoderModel::headerColor2(), bgColor));
         _ui->signalWidget->layout()->addWidget(new IconLabel("CanSignalEncoder", CanSignalEncoderModel::headerColor1(), CanSignalEncoderModel::headerColor2(), bgColor));
-        _ui->signalWidget->layout()->addWidget(new IconLabel("CanSignalCoder", CanSignalCoderModel::headerColor1(), CanSignalCoderModel::headerColor2(), bgColor));
         _ui->signalWidget->layout()->addWidget(new IconLabel("CanSignalSender", CanSignalSenderModel::headerColor1(), CanSignalSenderModel::headerColor2(), bgColor));
     }
 
