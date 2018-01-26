@@ -57,6 +57,7 @@ NodeDataType CanSignalEncoderModel::dataType(PortType portType, PortIndex ndx) c
 
 std::shared_ptr<NodeData> CanSignalEncoderModel::outData(PortIndex)
 {
+    cds_debug("Frame requested");
     return std::make_shared<CanSignalEncoderRawOut>(_frame);
 }
 
@@ -81,6 +82,8 @@ void CanSignalEncoderModel::setInData(std::shared_ptr<NodeData> nodeData, PortIn
 
 void CanSignalEncoderModel::sendFrame(const QCanBusFrame& frame) 
 {
+    cds_debug("Frame received");
+
     _frame = frame;
 
     emit dataUpdated(0);

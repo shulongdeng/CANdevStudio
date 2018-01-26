@@ -21,7 +21,7 @@ struct CanSignalSenderGuiInt {
     virtual void setAddCbk(const add_t& cb) = 0;
     virtual void setDockUndockCbk(const dockUndock_t& cb) = 0;
     virtual void setSendCbk(const send_t& cbk) = 0;
-    virtual void addRow() = 0;
+    virtual void addRow(const std::map<uint32_t, QStringList>& sigNames) = 0;
 };
 
 #endif // CANSIGNALSENDERGUIINT_H

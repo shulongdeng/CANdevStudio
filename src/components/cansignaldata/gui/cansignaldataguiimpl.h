@@ -39,6 +39,7 @@ struct CanSignalDataGuiImpl : public CanSignalDataGuiInt {
         _ui->tv->horizontalHeader()->setSectionsMovable(true);
         _ui->tv->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Stretch);
         _ui->tv->horizontalHeader()->setSectionResizeMode(2, QHeaderView::ResizeToContents);
+        _ui->tv->horizontalHeader()->setSectionResizeMode(4, QHeaderView::Stretch);
         _ui->tv->horizontalHeader()->setSectionResizeMode(5, QHeaderView::Stretch);
         _ui->tv->setColumnHidden(0, false);
 
@@ -56,7 +57,11 @@ struct CanSignalDataGuiImpl : public CanSignalDataGuiInt {
         _ui->tv->horizontalHeader()->setSortIndicator(0, Qt::AscendingOrder);
         _ui->tv->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Interactive);
         _ui->tv->horizontalHeader()->setSectionResizeMode(2, QHeaderView::Stretch);
-        _ui->tv->horizontalHeader()->setSectionResizeMode(5, QHeaderView::Interactive);
+        _ui->tv->horizontalHeader()->setSectionResizeMode(3, QHeaderView::ResizeToContents);
+        _ui->tv->horizontalHeader()->setSectionResizeMode(4, QHeaderView::ResizeToContents);
+        _ui->tv->horizontalHeader()->setSectionResizeMode(5, QHeaderView::ResizeToContents);
+        _ui->tv->horizontalHeader()->setSectionResizeMode(6, QHeaderView::ResizeToContents);
+        _ui->tv->horizontalHeader()->setSectionResizeMode(7, QHeaderView::ResizeToContents);
         _ui->tv->setColumnHidden(0, true);
 
         _tableState = _ui->tv->horizontalHeader()->saveState();

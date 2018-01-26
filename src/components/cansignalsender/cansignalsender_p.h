@@ -33,6 +33,7 @@ public:
 private:
     QStandardItemModel _tvModel;
     QStringList _tvColumns;
+    std::map<uint32_t, QStringList> _signalNames;
     CanSignalSender* q_ptr;
     CANmessages_t _messages;
     const QString _nameProperty = "name";

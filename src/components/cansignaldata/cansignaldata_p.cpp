@@ -6,7 +6,7 @@
 CanSignalDataPrivate::CanSignalDataPrivate(CanSignalData* q, CanSignalDataCtx&& ctx)
     : _ctx(std::move(ctx))
     , _ui(_ctx.get<CanSignalDataGuiInt>())
-    , _columnsOrder({ "rowID", "id", "name", "start", "length", "type", "factor", "offset", "min", "max" })
+    , _columnsOrder({ "rowID", "id", "name", "start", "length", "type", "order", "factor", "offset", "min", "max" })
     , _columnsSettings({ "id", "name", "dlc", "ecu", "cycle", "initial value" })
     , q_ptr(q)
 {
@@ -124,6 +124,7 @@ void CanSignalDataPrivate::loadDbc(const std::string& filename)
             list.append(new QStandardItem(QString::number(signal.startBit)));
             list.append(new QStandardItem(QString::number(signal.signalSize)));
             list.append(new QStandardItem(signal.valueSigned ? "signed" : "unsigned"));
+            list.append(new QStandardItem(QString::number(signal.byteOrder)));
             list.append(new QStandardItem(QString::number(signal.factor)));
             list.append(new QStandardItem(QString::number(signal.offset)));
             list.append(new QStandardItem(QString::number(signal.min)));

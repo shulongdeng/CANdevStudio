@@ -80,6 +80,13 @@ void CanSignalSender::startSimulation()
 void CanSignalSender::canDbUpdated(const CANmessages_t& messages)
 {
     d_ptr->_messages = messages;
+    d_ptr->_signalNames.clear();
+
+    for(const auto &msg : messages) {
+        for(const auto& sig : msg.second) {
+            d_ptr->_signalNames[msg.first.id].append(sig.signal_name.c_str());
+        }
+    }
 }
 
 

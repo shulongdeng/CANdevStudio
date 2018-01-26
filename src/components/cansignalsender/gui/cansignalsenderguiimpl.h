@@ -3,6 +3,8 @@
 
 #include "cansignalsenderguiint.h"
 #include "ui_cansignalsender.h"
+#include <QComboBox>
+#include <QLineEdit>
 #include <QStandardItemModel>
 #include <QWidget>
 #include <log.h>
@@ -44,8 +46,10 @@ struct CanSignalSenderGuiImpl : public CanSignalSenderGuiInt {
         _sendCbk = cbk;
     }
 
-    virtual void addRow()
+    virtual void addRow(const std::map<uint32_t, QStringList>& sigNames) override
     {
+        _sigNames = &sigNames;
+
         if (!_model) {
             cds_error("_model is NULL");
             return;
@@ -59,25 +63,54 @@ struct CanSignalSenderGuiImpl : public CanSignalSenderGuiInt {
         bt->setProperty("type", "nlmItem");
         bt->setFlat(true);
 
-        auto itemNdx = _model->index(_model->rowCount() - 1, _model->columnCount() - 1);
-        _ui->tv->setIndexWidget(itemNdx, bt);
+        QComboBox* sigCmb = new QComboBox();
 
-        QObject::connect(bt, &QPushButton::pressed, [list, this] {
+        QComboBox* idCmb = new QComboBox();
+
+        QObject::connect(idCmb, &QComboBox::currentTextChanged, [this, sigCmb](const QString& text) {
+            uint32_t id = text.toUInt(nullptr, 16);
+            sigCmb->clear();
+
+            if (_sigNames->count(id)) {
+                sigCmb->addItems(_sigNames->at(id));
+            } else {
+                cds_error("No signals for selected id 0x{:03x}", id);
+            }
+        });
+
+        for (const auto& msg : sigNames) {
+            idCmb->addItem(fmt::format("0x{:03x}", msg.first).c_str());
+        }
+
+        QLineEdit* le = new QLineEdit();
+
+        QObject::connect(bt, &QPushButton::pressed, [idCmb, sigCmb, le, this] {
             if (_sendCbk) {
-                if (list[0]->data(Qt::DisplayRole).toString().length() > 0
-                    && list[1]->data(Qt::DisplayRole).toString().length() > 0
-                    && list[2]->data(Qt::DisplayRole).toString().length() > 0) {
+                if (idCmb->currentText().length() > 0 && sigCmb->currentText().length() > 0
+                    && le->text().length() > 0) {
 
-                    _sendCbk(list[0]->data(Qt::DisplayRole).toString(), list[1]->data(Qt::DisplayRole).toString(),
-                        list[2]->data(Qt::DisplayRole));
+                    _sendCbk(idCmb->currentText(), sigCmb->currentText(), QVariant(le->text()));
                 }
             }
         });
+
+        auto idNdx = _model->index(_model->rowCount() - 1, 0);
+        _ui->tv->setIndexWidget(idNdx, idCmb);
+
+        auto sigNdx = _model->index(_model->rowCount() - 1, 1);
+        _ui->tv->setIndexWidget(sigNdx, sigCmb);
+
+        auto leNdx = _model->index(_model->rowCount() - 1, 2);
+        _ui->tv->setIndexWidget(leNdx, le);
+
+        auto pbNdx = _model->index(_model->rowCount() - 1, _model->columnCount() - 1);
+        _ui->tv->setIndexWidget(pbNdx, bt);
     }
 
 private:
     send_t _sendCbk{ nullptr };
     QStandardItemModel* _model;
+    const std::map<uint32_t, QStringList>* _sigNames;
     Ui::CanSignalSenderPrivate* _ui;
     QWidget* _widget;
 };

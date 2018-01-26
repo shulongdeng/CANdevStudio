@@ -16,7 +16,7 @@ CanSignalSenderPrivate::CanSignalSenderPrivate(CanSignalSender* q, CanSignalSend
         emit q_ptr->mainWidgetDockToggled(_ui.mainWidget());
     });
 
-    _ui.setAddCbk([this] { _ui.addRow(); });
+    _ui.setAddCbk([this] { _ui.addRow(_signalNames); });
 
     _ui.setSendCbk([this](const QString& id, const QString& name, const QVariant& val) {
         uint32_t idNum = id.toUInt(nullptr, 16);
