@@ -4,6 +4,7 @@
 #include <QtCore/QObject>
 #include <memory>
 #include "cansignalcoder.h"
+#include <cantypes.hpp>
 
 class CanSignalCoder;
 
@@ -17,10 +18,13 @@ public:
     QJsonObject getSettings();
     void setSettings(const QJsonObject& json);
     void decodeFrame(const QCanBusFrame& frame);
+    void encodeSignal(const QString& name, const QVariant& val);
 
 private:
     void initProps();
-    int64_t processIntegerSignal(const uint8_t *data, int startBit, int sigSize, bool littleEndian, bool isSigned);
+    int64_t rawToSignal(const uint8_t *data, int startBit, int sigSize, bool littleEndian, bool isSigned);
+    void signalToRaw(const uint32_t id, const CANsignal& sigDesc, const QVariant& sigVal);
+    const CANmessages_t::value_type* findInDb(uint32_t id); 
 
 public:
     bool _simStarted{ false };
@@ -30,6 +34,7 @@ public:
 private:
     CanSignalCoder* q_ptr;
     CANmessages_t _messages;
+    std::map<uint32_t, QByteArray> _rawCache;
     const QString _nameProperty = "name";
     ComponentInterface::ComponentProperties _supportedProps = {
             {_nameProperty,   {QVariant::String, true}}

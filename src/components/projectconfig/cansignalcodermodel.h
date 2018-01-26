@@ -6,13 +6,12 @@
 #include <QtCore/QObject>
 #include <cansignalcoder.h>
 #include <cantypes.hpp>
+#include <QCanBusFrame>
 
 using QtNodes::NodeData;
 using QtNodes::NodeDataType;
 using QtNodes::PortIndex;
 using QtNodes::PortType;
-
-struct QCanBusFrame;
 
 enum class Direction;
 
@@ -39,6 +38,7 @@ public:
     }
 
 public slots:
+    void sendFrame(const QCanBusFrame& frame);
 
 signals:
     void canDbUpdated(const CANmessages_t& messages);
@@ -46,6 +46,7 @@ signals:
     void signalReceived(const QString& name, const QVariant& val);
 
 private:
+    QCanBusFrame _frame;
     std::unique_ptr<NodePainter> _painter;
 };
 

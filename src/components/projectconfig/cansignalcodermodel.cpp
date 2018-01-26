@@ -35,6 +35,7 @@ CanSignalCoderModel::CanSignalCoderModel()
     connect(this, &CanSignalCoderModel::canDbUpdated, &_component, &CanSignalCoder::canDbUpdated);
     connect(this, &CanSignalCoderModel::frameReceived, &_component, &CanSignalCoder::frameReceived);
     connect(this, &CanSignalCoderModel::signalReceived, &_component, &CanSignalCoder::signalReceived);
+    connect(&_component, &CanSignalCoder::sendFrame, this, &CanSignalCoderModel::sendFrame);
 }
 
 QtNodes::NodePainterDelegate* CanSignalCoderModel::painterDelegate() const
@@ -57,10 +58,11 @@ NodeDataType CanSignalCoderModel::dataType(PortType portType, PortIndex ndx) con
     return {};
 }
 
-std::shared_ptr<NodeData> CanSignalCoderModel::outData(PortIndex)
+std::shared_ptr<NodeData> CanSignalCoderModel::outData(PortIndex ndx)
 {
-    // example
-    // return std::make_shared<CanDeviceDataOut>(_frame, _direction, _status);
+    if(ndx == 1) {
+        return std::make_shared<CanSignalCoderRawOut>(_frame);
+    }
 
     return {};
 }
@@ -77,7 +79,10 @@ void CanSignalCoderModel::setInData(std::shared_ptr<NodeData> nodeData, PortInde
             auto d = std::dynamic_pointer_cast<CanSignalCoderRawIn>(nodeData);
             assert(nullptr != d);
 
-            emit frameReceived(d->frame());
+            // We are interested in RX frames only!
+            if(d->direction() == Direction::RX) {
+                emit frameReceived(d->frame());
+            }
         } else if (nodeData->sameType(CanSignalCoderSignalIn())) {
             auto d = std::dynamic_pointer_cast<CanSignalCoderSignalIn>(nodeData);
             assert(nullptr != d);
@@ -87,4 +92,11 @@ void CanSignalCoderModel::setInData(std::shared_ptr<NodeData> nodeData, PortInde
             cds_warn("Incorrect nodeData");
         }
     }
+}
+
+void CanSignalCoderModel::sendFrame(const QCanBusFrame& frame) 
+{
+    _frame = frame;
+
+    emit dataUpdated(1);
 }
