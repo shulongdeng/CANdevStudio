@@ -34,7 +34,6 @@ target_include_directories(${{COMPONENT_NAME}} INTERFACE ${{CMAKE_CURRENT_SOURCE
         "name"_a = name);
 }
 
-
 std::string genComponentHdr(const std::string& name)
 {
     using namespace fmt::literals;
@@ -83,8 +82,7 @@ private:
 
 #endif //{nameUpper}_H
 )",
-    "name"_a = name, "nameUpper"_a = str_toupper(name));
-
+        "name"_a = name, "nameUpper"_a = str_toupper(name));
 }
 
 std::string genComponentSrc(const std::string& name)
@@ -170,7 +168,8 @@ void {name}::startSimulation()
 
     d->_simStarted = true;
 }}
-)", "name"_a = name, "nameLower"_a = str_tolower(name));
+)",
+        "name"_a = name, "nameLower"_a = str_tolower(name));
 }
 
 std::string genPrivateHdr(const std::string& name)
@@ -180,9 +179,9 @@ std::string genPrivateHdr(const std::string& name)
     return fmt::format(R"(#ifndef {nameUpper}_P_H
 #define {nameUpper}_P_H
 
+#include "{nameLower}.h"
 #include <QtCore/QObject>
 #include <memory>
-#include "{nameLower}.h"
 
 class {name};
 
@@ -214,8 +213,7 @@ private:
 
 #endif // {nameUpper}_P_H
 )",
-    "name"_a = name, "nameUpper"_a = str_toupper(name), "nameLower"_a = str_tolower(name));
-
+        "name"_a = name, "nameUpper"_a = str_toupper(name), "nameLower"_a = str_tolower(name));
 }
 
 std::string genPrivateSrc(const std::string& name)
@@ -264,7 +262,7 @@ void {name}Private::setSettings(const QJsonObject& json)
     }}
 }}
 )",
-    "name"_a = name, "nameUpper"_a = str_toupper(name), "nameLower"_a = str_tolower(name));
+        "name"_a = name, "nameUpper"_a = str_toupper(name), "nameLower"_a = str_tolower(name));
 }
 
 std::string genGuiCMake(const std::string name)
@@ -286,7 +284,6 @@ target_include_directories(${{COMPONENT_NAME}} INTERFACE ${{CMAKE_CURRENT_SOURCE
 )",
         "name"_a = name);
 }
-
 
 std::string genGuiComponentHdr(const std::string& name)
 {
@@ -337,8 +334,7 @@ private:
 
 #endif //{nameUpper}_H
 )",
-    "name"_a = name, "nameUpper"_a = str_toupper(name));
-
+        "name"_a = name, "nameUpper"_a = str_toupper(name));
 }
 
 std::string genGuiComponentSrc(const std::string& name)
@@ -424,7 +420,8 @@ void {name}::startSimulation()
 
     d->_simStarted = true;
 }}
-)", "name"_a = name, "nameLower"_a = str_tolower(name));
+)",
+        "name"_a = name, "nameLower"_a = str_tolower(name));
 }
 
 std::string genGuiPrivateHdr(const std::string& name)
@@ -434,10 +431,10 @@ std::string genGuiPrivateHdr(const std::string& name)
     return fmt::format(R"(#ifndef {nameUpper}_P_H
 #define {nameUpper}_P_H
 
-#include <QtCore/QObject>
-#include <memory>
 #include "gui/{nameLower}guiimpl.h"
 #include "{nameLower}.h"
+#include <QtCore/QObject>
+#include <memory>
 
 class {name};
 
@@ -471,8 +468,7 @@ private:
 
 #endif // {nameUpper}_P_H
 )",
-    "name"_a = name, "nameUpper"_a = str_toupper(name), "nameLower"_a = str_tolower(name));
-
+        "name"_a = name, "nameUpper"_a = str_toupper(name), "nameLower"_a = str_tolower(name));
 }
 
 std::string genGuiPrivateSrc(const std::string& name)
@@ -512,7 +508,8 @@ void {name}Private::setSettings(const QJsonObject& json)
 {{
     (void)json;
 }}
-)", "name"_a = name, "nameLower"_a = str_tolower(name));
+)",
+        "name"_a = name, "nameLower"_a = str_tolower(name));
 }
 
 std::string genGuiInt(const std::string& name)
@@ -536,7 +533,8 @@ struct {name}GuiInt {{
 }};
 
 #endif // {nameUpper}GUIINT_H
-)", "name"_a = name, "nameUpper"_a = str_toupper(name));
+)",
+        "name"_a = name, "nameUpper"_a = str_toupper(name));
 }
 
 std::string genGuiImpl(const std::string& name)
@@ -546,9 +544,9 @@ std::string genGuiImpl(const std::string& name)
     return fmt::format(R"(#ifndef {nameUpper}GUIIMPL_H
 #define {nameUpper}GUIIMPL_H
 
-#include <QWidget>
-#include "{nameLower}guiint.h"
 #include "ui_{nameLower}.h"
+#include "{nameLower}guiint.h"
+#include <QWidget>
 
 struct {name}GuiImpl : public {name}GuiInt {{
     {name}GuiImpl()
@@ -569,7 +567,8 @@ private:
 }};
 
 #endif // {nameUpper}GUIIMPL_H
-)", "name"_a = name, "nameUpper"_a = str_toupper(name), "nameLower"_a = str_tolower(name));
+)",
+        "name"_a = name, "nameUpper"_a = str_toupper(name), "nameLower"_a = str_tolower(name));
 }
 
 std::string genGui(const std::string& name)
@@ -597,7 +596,8 @@ std::string genGui(const std::string& name)
  <pixmapfunction></pixmapfunction>
  <connections/>
 </ui>
-)", "name"_a = name);
+)",
+        "name"_a = name);
 }
 
 std::string genDataModelHdr(const std::string& name)
@@ -650,7 +650,8 @@ private:
 }};
 
 #endif // {nameUpper}MODEL_H
-)", "name"_a = name, "nameUpper"_a = str_toupper(name), "nameLower"_a = str_tolower(name));
+)",
+        "name"_a = name, "nameUpper"_a = str_toupper(name), "nameLower"_a = str_tolower(name));
 }
 
 std::string genDataModelSrc(const std::string& name)
@@ -667,15 +668,15 @@ namespace {{
 const std::map<PortType, std::vector<NodeDataType>> portMappings = {{
     {{ PortType::In, 
         {{
-            //{{CanSignalCoderDataIn{}.type() }},
-            //{{CanSignalCoderSignalIn{}.type() }},
-            //{{CanSignalCoderRawIn{}.type() }}
+            //{{CanSignalCoderDataIn{{}}.type() }},
+            //{{CanSignalCoderSignalIn{{}}.type() }},
+            //{{CanSignalCoderRawIn{{}}.type() }}
         }}
     }},
     {{ PortType::Out, 
         {{
-            //{{CanSignalCoderSignalOut{}.type()}}, 
-            //{{CanSignalCoderRawOut{}.type() }}
+            //{{CanSignalCoderSignalOut{{}}.type()}}, 
+            //{{CanSignalCoderRawOut{{}}.type() }}
         }}
     }}
 }};
@@ -704,12 +705,12 @@ unsigned int {name}Model::nPorts(PortType portType) const
 
 NodeDataType {name}Model::dataType(PortType portType, PortIndex) const
 {{
-    if (portMappings.at(portType).size() > static_cast<uint32_t>(ndx)) {
+    if (portMappings.at(portType).size() > static_cast<uint32_t>(ndx)) {{
         return portMappings.at(portType)[ndx];
-    }
+    }}
 
-    cds_error("No port mapping for ndx: {}", ndx);
-    return {};
+    cds_error("No port mapping for ndx: {{ }}", ndx);
+    return {{ }};
 }}
 
 std::shared_ptr<NodeData> {name}Model::outData(PortIndex)
@@ -732,7 +733,8 @@ void {name}Model::setInData(std::shared_ptr<NodeData> nodeData, PortIndex)
     // }}
     (void) nodeData;
 }}
-)", "name"_a = name, "nameUpper"_a = str_toupper(name), "nameLower"_a = str_tolower(name));
+)",
+        "name"_a = name, "nameUpper"_a = str_toupper(name), "nameLower"_a = str_tolower(name));
 }
 
 std::string genDataTypes(const std::string& name)
@@ -748,7 +750,8 @@ typedef CanDeviceDataIn {name}DataOut;
 typedef CanDeviceDataOut {name}DataIn;
 
 #endif // {nameUpper}DATA_H
-)", "name"_a = name, "nameUpper"_a = str_toupper(name), "nameLower"_a = str_tolower(name));
+)",
+        "name"_a = name, "nameUpper"_a = str_toupper(name), "nameLower"_a = str_tolower(name));
 }
 
 void writeToFile(const boost::filesystem::path& filename, const std::string& content)
@@ -788,7 +791,7 @@ int main(int argc, char* argv[])
     auto componentsPath = result["o"].as<std::string>();
     auto componentNameLower = str_tolower(componentName);
 
-    if (!boost::filesystem::exists( { componentsPath } )) {
+    if (!boost::filesystem::exists({ componentsPath })) {
         std::cerr << "component dir does not exist" << std::endl;
 
         return EXIT_FAILURE;
@@ -803,21 +806,21 @@ int main(int argc, char* argv[])
         }
     }
 
-    boost::filesystem::path projectConfigDir(componentsPath + "/projectconfig" );
+    boost::filesystem::path projectConfigDir(componentsPath + "/projectconfig");
     if (!boost::filesystem::exists(projectConfigDir)) {
         std::cerr << "projectconfig directory does not exist" << std::endl;
 
         return EXIT_FAILURE;
     }
 
-    boost::filesystem::path dataTypesDir(projectConfigDir / "datamodeltypes" );
+    boost::filesystem::path dataTypesDir(projectConfigDir / "datamodeltypes");
     if (!boost::filesystem::exists(dataTypesDir)) {
         std::cerr << "datamodeltypes directory does not exist" << std::endl;
 
         return EXIT_FAILURE;
     }
 
-    if(result.count("no-gui")) {
+    if (result.count("no-gui")) {
         writeToFile(componentDir / "CMakeLists.txt", genCMake(componentNameLower));
         writeToFile(componentDir / (componentNameLower + ".h"), genComponentHdr(componentName));
         writeToFile(componentDir / (componentNameLower + ".cpp"), genComponentSrc(componentName));
