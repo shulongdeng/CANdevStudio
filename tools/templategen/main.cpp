@@ -703,7 +703,7 @@ unsigned int {name}Model::nPorts(PortType portType) const
     return portMappings.at(portType).size();
 }}
 
-NodeDataType {name}Model::dataType(PortType portType, PortIndex) const
+NodeDataType {name}Model::dataType(PortType portType, PortIndex ndx) const
 {{
     if (portMappings.at(portType).size() > static_cast<uint32_t>(ndx)) {{
         return portMappings.at(portType)[ndx];

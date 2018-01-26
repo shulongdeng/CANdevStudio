@@ -33,6 +33,8 @@ void DragWidget::mousePressEvent(QMouseEvent *event)
        el->objectName() != "CanRawSender" &&
        el->objectName() != "CanRawView" &&
        el->objectName() != "CanRawPlayer" &&
+       el->objectName() != "CanSignalDecoder" &&
+       el->objectName() != "CanSignalEncoder" &&
        el->objectName() != "CanSignalCoder" &&
        el->objectName() != "CanSignalSender" &&
        el->objectName() != "CanSignalData")

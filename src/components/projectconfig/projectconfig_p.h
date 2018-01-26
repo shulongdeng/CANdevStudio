@@ -6,6 +6,7 @@
 #include "canrawplayermodel.h"
 #include "cansignaldatamodel.h"
 #include "cansignalcodermodel.h"
+#include "cansignaldecodermodel.h"
 #include "cansignalsendermodel.h"
 #include "flowviewwrapper.h"
 #include "modeltoolbutton.h"
@@ -42,6 +43,7 @@ public:
         modelRegistry.registerModel<CanSignalDataModel>();
         modelRegistry.registerModel<CanSignalCoderModel>();
         modelRegistry.registerModel<CanSignalSenderModel>();
+        modelRegistry.registerModel<CanSignalDecoderModel>();
 
         connect(&_graphScene, &QtNodes::FlowScene::nodeCreated, this, &ProjectConfigPrivate::nodeCreatedCallback);
         connect(&_graphScene, &QtNodes::FlowScene::nodeDeleted, this, &ProjectConfigPrivate::nodeDeletedCallback);
@@ -90,6 +92,7 @@ public:
         _ui->rawWidget->layout()->addWidget(new IconLabel("CanRawView", CanRawViewModel::headerColor1(), CanRawViewModel::headerColor2(), bgColor));
         _ui->rawWidget->layout()->addWidget(new IconLabel("CanRawPlayer", CanRawPlayerModel::headerColor1(), CanRawPlayerModel::headerColor2(), bgColor));
         _ui->signalWidget->layout()->addWidget(new IconLabel("CanSignalData", CanSignalDataModel::headerColor1(), CanSignalDataModel::headerColor2(), bgColor));
+        _ui->signalWidget->layout()->addWidget(new IconLabel("CanSignalDecoder", CanSignalDecoderModel::headerColor1(), CanSignalDecoderModel::headerColor2(), bgColor));
         _ui->signalWidget->layout()->addWidget(new IconLabel("CanSignalCoder", CanSignalCoderModel::headerColor1(), CanSignalCoderModel::headerColor2(), bgColor));
         _ui->signalWidget->layout()->addWidget(new IconLabel("CanSignalSender", CanSignalSenderModel::headerColor1(), CanSignalSenderModel::headerColor2(), bgColor));
     }

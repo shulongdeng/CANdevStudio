@@ -9,6 +9,7 @@ set(SRC
     canrawplayermodel.cpp
     cansignaldatamodel.cpp
     cansignalcodermodel.cpp
+    cansignaldecodermodel.cpp
     cansignalsendermodel.cpp
     dragwidget.cpp
     flowviewwrapper.cpp
@@ -23,7 +24,7 @@ add_definitions(-DRAPIDJSON_HAS_STDSTRING=1 -DRAPIDJSON_HAS_CXX11_RVALUE_REFS=1)
 add_library(${COMPONENT_NAME} ${SRC})
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/..")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../../../3rdParty/rapidjson/include")
-target_link_libraries(${COMPONENT_NAME} Qt5::Widgets Qt5::Core Qt5::SerialBus nodes candevice canrawview canrawsender cds-common canrawplayer cansignaldata cansignalcoder cansignalsender)
+target_link_libraries(${COMPONENT_NAME} Qt5::Widgets Qt5::Core Qt5::SerialBus nodes candevice canrawview canrawsender cds-common canrawplayer cansignaldata cansignalcoder cansignalsender cansignaldecoder)
 target_include_directories(${COMPONENT_NAME} INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
 
