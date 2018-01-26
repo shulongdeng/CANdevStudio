@@ -34,6 +34,7 @@ CanSignalCoderModel::CanSignalCoderModel()
 
     connect(this, &CanSignalCoderModel::canDbUpdated, &_component, &CanSignalCoder::canDbUpdated);
     connect(this, &CanSignalCoderModel::frameReceived, &_component, &CanSignalCoder::frameReceived);
+    connect(this, &CanSignalCoderModel::signalReceived, &_component, &CanSignalCoder::signalReceived);
 }
 
 QtNodes::NodePainterDelegate* CanSignalCoderModel::painterDelegate() const
@@ -77,6 +78,11 @@ void CanSignalCoderModel::setInData(std::shared_ptr<NodeData> nodeData, PortInde
             assert(nullptr != d);
 
             emit frameReceived(d->frame());
+        } else if (nodeData->sameType(CanSignalCoderSignalIn())) {
+            auto d = std::dynamic_pointer_cast<CanSignalCoderSignalIn>(nodeData);
+            assert(nullptr != d);
+
+            emit signalReceived(d->name(), d->value());
         } else {
             cds_warn("Incorrect nodeData");
         }

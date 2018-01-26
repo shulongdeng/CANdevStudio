@@ -41,6 +41,7 @@ public slots:
     void startSimulation() override;
     void canDbUpdated(const CANmessages_t& messages);
     void frameReceived(const QCanBusFrame& frame);
+    void signalReceived(const QString& name, const QVariant& val);
 
 private:
     QScopedPointer<CanSignalCoderPrivate> d_ptr;

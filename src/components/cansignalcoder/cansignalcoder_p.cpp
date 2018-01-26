@@ -96,7 +96,7 @@ void CanSignalCoderPrivate::decodeFrame(const QCanBusFrame& frame)
             }
 
             QString sigName
-                = fmt::format("0x{:03X}{}_{}", frame.frameId(), frame.hasExtendedFrameFormat() ? "x" : "", sig.signal_name)
+                = fmt::format("0x{:03x}{}_{}", frame.frameId(), frame.hasExtendedFrameFormat() ? "x" : "", sig.signal_name)
                       .c_str();
 
             emit q_ptr->sendSignal(sigName, sigVal);

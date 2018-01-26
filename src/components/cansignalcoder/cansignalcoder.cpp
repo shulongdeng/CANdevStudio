@@ -89,3 +89,8 @@ void CanSignalCoder::frameReceived(const QCanBusFrame& frame)
     d_ptr->decodeFrame(frame);    
 }
 
+void CanSignalCoder::signalReceived(const QString& name, const QVariant& val)
+{
+    cds_info("Signal received: {}, {}", name.toStdString(), val.toString().toStdString());
+}
+

@@ -76,3 +76,10 @@ void CanSignalSender::startSimulation()
 
     d->_simStarted = true;
 }
+
+void CanSignalSender::canDbUpdated(const CANmessages_t& messages)
+{
+    d_ptr->_messages = messages;
+}
+
+

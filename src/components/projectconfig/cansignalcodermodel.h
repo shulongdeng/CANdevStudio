@@ -43,6 +43,7 @@ public slots:
 signals:
     void canDbUpdated(const CANmessages_t& messages);
     void frameReceived(const QCanBusFrame& frame);
+    void signalReceived(const QString& name, const QVariant& val);
 
 private:
     std::unique_ptr<NodePainter> _painter;

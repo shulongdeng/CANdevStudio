@@ -20,9 +20,6 @@ public:
     QJsonObject getSettings();
     void setSettings(const QJsonObject& json);
 
-public slots:
-    void canDbUpdated(const CANmessages_t& messages);
-
 private:
     void initProps();
 

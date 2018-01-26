@@ -8,15 +8,12 @@ namespace {
 const std::map<PortType, std::vector<NodeDataType>> portMappings = {
     { PortType::In, 
         {
-            //{CanSignalCoderDataIn{}.type() },
-            //{CanSignalCoderSignalIn{}.type() },
-            //{CanSignalCoderRawIn{}.type() }
+            {CanSignalSenderDataIn{}.type() }
         }
     },
     { PortType::Out, 
         {
-            //{CanSignalCoderSignalOut{}.type()}, 
-            //{CanSignalCoderRawOut{}.type() }
+            {CanSignalSenderSignalOut{}.type()} 
         }
     }
 };
@@ -31,6 +28,9 @@ CanSignalSenderModel::CanSignalSenderModel()
     _label->setAlignment(Qt::AlignVCenter | Qt::AlignHCenter);
     _label->setFixedSize(75, 25);
     _label->setAttribute(Qt::WA_TranslucentBackground);
+
+    connect(this, &CanSignalSenderModel::canDbUpdated, &_component, &CanSignalSender::canDbUpdated);
+    connect(&_component, &CanSignalSender::sendSignal, this, &CanSignalSenderModel::sendSignal);
 }
 
 QtNodes::NodePainterDelegate* CanSignalSenderModel::painterDelegate() const
@@ -55,21 +55,26 @@ NodeDataType CanSignalSenderModel::dataType(PortType portType, PortIndex ndx) co
 
 std::shared_ptr<NodeData> CanSignalSenderModel::outData(PortIndex)
 {
-    // example
-    // return std::make_shared<CanDeviceDataOut>(_frame, _direction, _status);
-
-    return {};
+    return std::make_shared<CanSignalSenderSignalOut>(_sigName, _sigVal);
 }
 
 void CanSignalSenderModel::setInData(std::shared_ptr<NodeData> nodeData, PortIndex)
 {
-    // example
-    // if (nodeData) {
-    //     auto d = std::dynamic_pointer_cast<CanDeviceDataIn>(nodeData);
-    //     assert(nullptr != d);
-    //     emit sendFrame(d->frame());
-    // } else {
-    //     cds_warn("Incorrect nodeData");
-    // }
-    (void)nodeData;
+    if (nodeData) {
+        if (nodeData->sameType(CanSignalSenderDataIn())) {
+            auto d = std::dynamic_pointer_cast<CanSignalSenderDataIn>(nodeData);
+            assert(nullptr != d);
+
+            emit canDbUpdated(d->messages());
+        } else {
+            cds_warn("Incorrect nodeData");
+        }
+    }
+}
+
+void CanSignalSenderModel::sendSignal(const QString& name, const QVariant& val)
+{
+    _sigName = name;
+    _sigVal = val;
+    emit dataUpdated(0); // Data ready on port 0
 }

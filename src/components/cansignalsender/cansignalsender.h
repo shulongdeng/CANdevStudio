@@ -6,6 +6,7 @@
 #include <componentinterface.h>
 #include <context.h>
 #include <memory>
+#include <cantypes.hpp>
 
 class CanSignalSenderPrivate;
 class QWidget;
@@ -32,10 +33,12 @@ public:
 
 signals:
     void mainWidgetDockToggled(QWidget* widget) override;
+    void sendSignal(const QString& name, const QVariant& val);
 
 public slots:
     void stopSimulation() override;
     void startSimulation() override;
+    void canDbUpdated(const CANmessages_t& messages);
 
 private:
     QScopedPointer<CanSignalSenderPrivate> d_ptr;

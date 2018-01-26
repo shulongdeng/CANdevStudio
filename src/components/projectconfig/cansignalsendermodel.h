@@ -5,6 +5,7 @@
 #include "nodepainter.h"
 #include <QtCore/QObject>
 #include <cansignalsender.h>
+#include <cantypes.hpp>
 
 using QtNodes::NodeData;
 using QtNodes::NodeDataType;
@@ -36,11 +37,15 @@ public:
     }
 
 public slots:
+    void sendSignal(const QString& name, const QVariant& val);
 
 signals:
+    void canDbUpdated(const CANmessages_t& messages);
 
 private:
     std::unique_ptr<NodePainter> _painter;
+    QString _sigName;
+    QVariant _sigVal;
 };
 
 #endif // CANSIGNALSENDERMODEL_H
