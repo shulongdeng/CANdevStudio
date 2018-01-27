@@ -501,12 +501,21 @@ ComponentInterface::ComponentProperties {name}Private::getSupportedProperties() 
 
 QJsonObject {name}Private::getSettings()
 {{
-    return {{ }};
+    QJsonObject json;
+
+    for (const auto& p : _props) {{
+        json[p.first] = QJsonValue::fromVariant(p.second);
+    }}
+
+    return json;
 }}
 
 void {name}Private::setSettings(const QJsonObject& json)
 {{
-    (void)json;
+    for (const auto& p : _supportedProps) {{
+        if (json.contains(p.first))
+            _props[p.first] = json[p.first].toVariant();
+    }}
 }}
 )",
         "name"_a = name, "nameLower"_a = str_tolower(name));
@@ -550,7 +559,7 @@ std::string genGuiImpl(const std::string& name)
 
 struct {name}GuiImpl : public {name}GuiInt {{
     {name}GuiImpl()
-        : _ui(new Ui::{name})
+        : _ui(new Ui::{name}Private)
         , _widget(new QWidget)
     {{
         _ui->setupUi(_widget);
@@ -562,7 +571,7 @@ struct {name}GuiImpl : public {name}GuiInt {{
     }}
 
 private:
-    Ui::{name}* _ui;
+    Ui::{name}Private* _ui;
     QWidget* _widget;
 }};
 
@@ -579,7 +588,7 @@ std::string genGui(const std::string& name)
  <author></author>
  <comment></comment>
  <exportmacro></exportmacro>
- <class>{name}</class>
+ <class>{name}Private</class>
  <widget class="QWidget" name="{name}" >
   <property name="geometry" >
    <rect>
