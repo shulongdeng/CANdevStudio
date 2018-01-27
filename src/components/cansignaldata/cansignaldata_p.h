@@ -40,6 +40,7 @@ public:
     SearchModel _tvModelSettingsFilter;
 
 private:
+    std::map<uint32_t, std::pair<QString, QString>> _msgSettings;
     CanSignalData* q_ptr;
     const QString _fileProperty = "file";
     const QString _nameProperty = "name";

@@ -2,6 +2,7 @@
 #include <dbcparser.h>
 #include <fstream>
 #include <log.h>
+#include <QJsonArray>
 
 CanSignalDataPrivate::CanSignalDataPrivate(CanSignalData* q, CanSignalDataCtx&& ctx)
     : _ctx(std::move(ctx))
@@ -56,6 +57,37 @@ QJsonObject CanSignalDataPrivate::getSettings()
     for (const auto& p : _props) {
         json[p.first] = QJsonValue::fromVariant(p.second);
     }
+
+    _msgSettings.clear();
+    QJsonArray array;
+    for(int i = 0; i < _tvModelSettings.rowCount(); ++i) {
+        uint32_t id = _tvModelSettings.item(i, 0)->data(Qt::DisplayRole).toString().toUInt(nullptr, 16);
+        auto cyclePtr = _tvModelSettings.item(i, 4);
+        auto initValPtr = _tvModelSettings.item(i, 5);
+        QVariant cycle;
+        QVariant initVal;
+
+        if(cyclePtr) {
+            cycle = cyclePtr->data(Qt::DisplayRole);
+        }
+
+        if(initValPtr) {
+            initVal = initValPtr->data(Qt::DisplayRole);
+        }
+
+        if(cycle.isValid() || initVal.isValid()) {
+            _msgSettings[id] = std::make_pair(cycle.toString(), initVal.toString());
+
+            QJsonObject obj;
+            obj["id"] = QString::number(id, 16);
+            obj["cycle"] = cycle.toString();
+            obj["initVal"] = initVal.toString();
+
+            array.append(obj);
+        }
+    }
+
+    json["msgSettings"] = array;
 
     return json;
 }
