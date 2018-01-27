@@ -4,6 +4,7 @@
 #include <QWidget>
 #include "cansignaldataguiint.h"
 #include "ui_cansignaldata.h"
+#include "searchmodel.h"
 
 struct CanSignalDataGuiImpl : public CanSignalDataGuiInt {
     CanSignalDataGuiImpl()
@@ -54,15 +55,13 @@ struct CanSignalDataGuiImpl : public CanSignalDataGuiInt {
 
         _ui->tv->setModel(&tvModel);
         _ui->tv->horizontalHeader()->setSectionsMovable(true);
-        _ui->tv->horizontalHeader()->setSortIndicator(0, Qt::AscendingOrder);
-        _ui->tv->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Interactive);
-        _ui->tv->horizontalHeader()->setSectionResizeMode(2, QHeaderView::Stretch);
+        _ui->tv->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Interactive);
+        _ui->tv->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Stretch);
+        _ui->tv->horizontalHeader()->setSectionResizeMode(2, QHeaderView::ResizeToContents);
         _ui->tv->horizontalHeader()->setSectionResizeMode(3, QHeaderView::ResizeToContents);
         _ui->tv->horizontalHeader()->setSectionResizeMode(4, QHeaderView::ResizeToContents);
         _ui->tv->horizontalHeader()->setSectionResizeMode(5, QHeaderView::ResizeToContents);
         _ui->tv->horizontalHeader()->setSectionResizeMode(6, QHeaderView::ResizeToContents);
-        _ui->tv->horizontalHeader()->setSectionResizeMode(7, QHeaderView::ResizeToContents);
-        _ui->tv->setColumnHidden(0, true);
 
         _tableState = _ui->tv->horizontalHeader()->saveState();
 
@@ -72,6 +71,11 @@ struct CanSignalDataGuiImpl : public CanSignalDataGuiInt {
         //tvModel.setHeaderData(3, Qt::Horizontal, QVariant::fromValue(CRV_ColType::str_type), Qt::UserRole); // direction
         //tvModel.setHeaderData(4, Qt::Horizontal, QVariant::fromValue(CRV_ColType::uint_type), Qt::UserRole); // length
         //tvModel.setHeaderData(5, Qt::Horizontal, QVariant::fromValue(CRV_ColType::str_type), Qt::UserRole); // data
+    }
+
+    void initSearch(SearchModel& model) override
+    {
+        QObject::connect(_ui->searchLine, &QLineEdit::textChanged, &model, &SearchModel::updateFilter);
     }
 
 

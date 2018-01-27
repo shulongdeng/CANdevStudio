@@ -5,6 +5,7 @@ set(SRC
     gui/cansignaldataguiimpl.h
     cansignaldata.cpp
     cansignaldata_p.cpp
+    searchmodel.cpp
 )
 
 add_library(${COMPONENT_NAME} ${SRC})

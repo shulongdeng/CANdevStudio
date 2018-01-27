@@ -6,7 +6,7 @@
 CanSignalDataPrivate::CanSignalDataPrivate(CanSignalData* q, CanSignalDataCtx&& ctx)
     : _ctx(std::move(ctx))
     , _ui(_ctx.get<CanSignalDataGuiInt>())
-    , _columnsOrder({ "rowID", "id", "name", "start", "length", "type", "order", "factor", "offset", "min", "max" })
+    , _columnsOrder({ "id", "name", "start", "length", "type", "order", "factor", "offset", "min", "max" })
     , _columnsSettings({ "id", "name", "dlc", "ecu", "cycle", "initial value" })
     , q_ptr(q)
 {
@@ -14,15 +14,20 @@ CanSignalDataPrivate::CanSignalDataPrivate(CanSignalData* q, CanSignalDataCtx&& 
 
     _tvModelSettings.setHorizontalHeaderLabels(_columnsSettings);
     _tvModel.setHorizontalHeaderLabels(_columnsOrder);
-    _ui.initTableView(_tvModel);
+    _tvModelFilter.setSourceModel(&_tvModel);
+    _ui.initTableView(_tvModelFilter);
+    _ui.initSearch(_tvModelFilter);
+    
+    _tvModelSettingsFilter.setSourceModel(&_tvModelSettings);
+    _ui.initSearch(_tvModelSettingsFilter);
 
     _ui.setSettingsCbk([this] {
         _settings = !_settings;
 
         if(_settings) {
-            _ui.initSettings(_tvModelSettings);
+            _ui.initSettings(_tvModelSettingsFilter);
         } else {
-            _ui.initTableView(_tvModel);
+            _ui.initTableView(_tvModelFilter);
         }
     });
 
@@ -97,7 +102,6 @@ void CanSignalDataPrivate::loadDbc(const std::string& filename)
     emit q_ptr->canDbUpdated(_canDb);
 
     _tvModel.removeRows(0, _tvModel.rowCount());
-    uint32_t rowID = 0;
 
     for(auto &message : _canDb) {
         QList<QStandardItem*> settingsList;
@@ -118,7 +122,6 @@ void CanSignalDataPrivate::loadDbc(const std::string& filename)
         for(auto &signal : message.second) {
             QList<QStandardItem*> list;
 
-            list.append(new QStandardItem(QString::number(rowID++)));
             list.append(new QStandardItem(frameID));
             list.append(new QStandardItem(signal.signal_name.c_str()));
             list.append(new QStandardItem(QString::number(signal.startBit)));

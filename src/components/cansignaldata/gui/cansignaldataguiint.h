@@ -6,6 +6,7 @@
 
 class QWidget;
 class QAbstractItemModel;
+class SearchModel;
 
 struct CanSignalDataGuiInt {
     typedef std::function<void()> settings_t;
@@ -20,6 +21,7 @@ struct CanSignalDataGuiInt {
     virtual void initTableView(QAbstractItemModel& tvModel) = 0;
     virtual void setSettingsCbk(const settings_t& cb) = 0;
     virtual void setDockUndockCbk(const dockUndock_t& cb) = 0;
+    virtual void initSearch(SearchModel& model) = 0;
 };
 
 #endif // CANSIGNALDATAGUIINT_H

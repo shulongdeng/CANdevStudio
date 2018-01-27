@@ -6,6 +6,7 @@
 #include "gui/cansignaldataguiimpl.h"
 #include "cansignaldata.h"
 #include <QStandardItemModel>
+#include "searchmodel.h"
 
 class CanSignalData;
 
@@ -34,7 +35,9 @@ public:
     QStringList _columnsOrder;
     QStringList _columnsSettings;
     QStandardItemModel _tvModel;
+    SearchModel _tvModelFilter;
     QStandardItemModel _tvModelSettings;
+    SearchModel _tvModelSettingsFilter;
 
 private:
     CanSignalData* q_ptr;
