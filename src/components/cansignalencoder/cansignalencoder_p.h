@@ -4,6 +4,7 @@
 #include "cansignalencoder.h"
 #include <QtCore/QObject>
 #include <memory>
+#include <QTimer>
 
 class CanSignalEncoder;
 
@@ -27,6 +28,7 @@ public:
     bool _simStarted{ false };
     CanSignalEncoderCtx _ctx;
     std::map<QString, QVariant> _props;
+    std::vector<std::unique_ptr<QTimer>> _cycleTimers;
 
 private:
     CanSignalEncoder* q_ptr;

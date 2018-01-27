@@ -125,7 +125,7 @@ void CanSignalEncoderPrivate::encodeSignal(const QString& name, const QVariant& 
 
     for (auto& sig : msgDesc->second) {
         if (sig.signal_name == sigName.toStdString()) {
-            if (!_rawCache[id].size()) {
+            if (_rawCache[id].size() < (int)msgDesc->first.dlc) {
                 cds_info("Setting up new cache for {:03x} msg", id);
                 // Set chache for the first time
                 _rawCache[id].fill(0, msgDesc->first.dlc);

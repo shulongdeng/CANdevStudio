@@ -2,6 +2,7 @@
 #include "cansignalencoder_p.h"
 #include <confighelpers.h>
 #include <log.h>
+#include <QCanBusFrame>
 
 CanSignalEncoder::CanSignalEncoder()
     : d_ptr(new CanSignalEncoderPrivate(this))
@@ -13,9 +14,7 @@ CanSignalEncoder::CanSignalEncoder(CanSignalEncoderCtx&& ctx)
 {
 }
 
-CanSignalEncoder::~CanSignalEncoder()
-{
-}
+CanSignalEncoder::~CanSignalEncoder() {}
 
 QWidget* CanSignalEncoder::mainWidget()
 {
@@ -49,9 +48,7 @@ std::shared_ptr<QObject> CanSignalEncoder::getQConfig() const
     return configHelpers::getQConfig(getSupportedProperties(), d->_props);
 }
 
-void CanSignalEncoder::configChanged()
-{
-}
+void CanSignalEncoder::configChanged() {}
 
 bool CanSignalEncoder::mainWidgetDocked() const
 {
@@ -69,6 +66,10 @@ void CanSignalEncoder::stopSimulation()
     Q_D(CanSignalEncoder);
 
     d->_simStarted = false;
+
+    for(auto &timer : d_ptr->_cycleTimers) {
+        timer->stop();
+    }
 }
 
 void CanSignalEncoder::startSimulation()
@@ -76,16 +77,55 @@ void CanSignalEncoder::startSimulation()
     Q_D(CanSignalEncoder);
 
     d->_simStarted = true;
+
+    for(auto &timer : d_ptr->_cycleTimers) {
+        timer->start();
+    }
 }
 
 void CanSignalEncoder::canDbUpdated(const CANmessages_t& messages)
 {
     d_ptr->_messages = messages;
+
+    d_ptr->_cycleTimers.clear();
+
+    for (const auto& msg : messages) {
+        if (msg.first.initValue.length()) {
+            d_ptr->_rawCache[msg.first.id] = QByteArray::fromHex(msg.first.initValue.c_str());
+        }
+
+        if (msg.first.updateCycle) {
+            QTimer *timer = new QTimer;
+            timer->setInterval(msg.first.updateCycle);
+            connect(timer, &QTimer::timeout, [ this, msg ] {
+                QCanBusFrame frame;
+                frame.setFrameId(msg.first.id);
+                if (d_ptr->_rawCache[msg.first.id].size() < (int)msg.first.dlc) {
+                    cds_info("Setting up new cache for {:03x} msg", msg.first.id);
+                    // Set chache for the first time
+                    d_ptr->_rawCache[msg.first.id].fill(0, msg.first.dlc);
+                }
+
+                frame.setPayload(d_ptr->_rawCache[msg.first.id]);
+                emit sendFrame(frame);
+            });
+
+            d_ptr->_cycleTimers.push_back(std::make_unique<QTimer>());
+            d_ptr->_cycleTimers.back().reset(timer);
+        }
+
+        if (msg.first.updateCycle || msg.first.initValue.length()) {
+            cds_debug("Settings for msg '{:03x}', cycle: {}, initValue: {}", msg.first.id, msg.first.updateCycle,
+                msg.first.initValue);
+        }
+    }
 }
 
 void CanSignalEncoder::signalReceived(const QString& name, const QVariant& val)
 {
-    cds_info("Signal received: {}, {}", name.toStdString(), val.toString().toStdString());
+    if (d_ptr->_simStarted) {
+        cds_info("Signal received: {}, {}", name.toStdString(), val.toString().toStdString());
 
-    d_ptr->encodeSignal(name, val);
+        d_ptr->encodeSignal(name, val);
+    }
 }

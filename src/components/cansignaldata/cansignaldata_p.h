@@ -20,6 +20,7 @@ public:
     QJsonObject getSettings();
     void setSettings(const QJsonObject& json);
     void loadDbc(const std::string& filename);
+    std::pair<CANmessage, std::vector<CANsignal>>* findInDb(uint32_t id);
 
 private:
     void initProps();
@@ -38,6 +39,7 @@ public:
     SearchModel _tvModelFilter;
     QStandardItemModel _tvModelSettings;
     SearchModel _tvModelSettingsFilter;
+    CANmessages_t _messages;
 
 private:
     std::map<uint32_t, std::pair<QString, QString>> _msgSettings;
@@ -48,7 +50,6 @@ private:
             {_nameProperty,   {QVariant::String, true}},
             {_fileProperty,   {QVariant::String, true}}
     };
-    CANmessages_t _canDb;
 };
 
 #endif // CANSIGNALDATA_P_H

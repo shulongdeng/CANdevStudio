@@ -98,6 +98,56 @@ void CanSignalDataPrivate::setSettings(const QJsonObject& json)
         if (json.contains(p.first))
             _props[p.first] = json[p.first].toVariant();
     }
+
+    _msgSettings.clear();
+    if (json.contains("msgSettings")) {
+        if (json["msgSettings"].type() == QJsonValue::Array) {
+            auto rowArray = json["msgSettings"].toArray();
+
+            for (int i = 0; i < rowArray.size(); ++i) {
+                if (rowArray[i].type() == QJsonValue::Object) {
+                    auto row = rowArray[i].toObject();
+                    QString id, cycle, initVal;
+
+                    if (row.contains("id")) {
+                        id = row["id"].toString();
+                    }
+
+                    if (row.contains("cycle")) {
+                        cycle = row["cycle"].toString();
+                    }
+
+                    if (row.contains("initVal")) {
+                        initVal = row["initVal"].toString();
+                    }
+
+                    if(id.length() && (cycle.length() || initVal.length())) {
+                        _msgSettings[id.toUInt(nullptr, 16)] = std::make_pair(cycle, initVal);
+                    }
+                } else {
+                    cds_warn("rows array element expected to be object!");
+                }
+            }
+        } else {
+            cds_warn("rows expected to be array!");
+        }
+    } else {
+        cds_info("Rows to restore not found");
+    }
+
+    bool dbUpdated = false;
+    for(const auto& msg : _msgSettings) {
+        auto msgDb = findInDb(msg.first);
+        if(msgDb) {
+            msgDb->first.updateCycle = msg.second.first.toUInt();
+            msgDb->first.initValue = msg.second.second.toStdString();
+            dbUpdated = true;
+        }
+    }
+
+    if(dbUpdated) {
+        emit q_ptr->canDbUpdated(_messages);
+    }
 }
 
 std::string CanSignalDataPrivate::loadFile(const std::string& filename)
@@ -127,15 +177,23 @@ void CanSignalDataPrivate::loadDbc(const std::string& filename)
         return;
     }
 
-    _canDb = parser.getDb().messages;
+    _messages = parser.getDb().messages;
 
-    cds_info("CAN DB load successful. {} records found", _canDb.size());
-
-    emit q_ptr->canDbUpdated(_canDb);
+    cds_info("CAN DB load successful. {} records found", _messages.size());
 
     _tvModel.removeRows(0, _tvModel.rowCount());
 
-    for(auto &message : _canDb) {
+    for(const auto& msg : _msgSettings) {
+        auto msgDb = findInDb(msg.first);
+        if(msgDb) {
+            msgDb->first.updateCycle = msg.second.first.toUInt();
+            msgDb->first.initValue = msg.second.second.toStdString();
+        }
+    }
+
+    emit q_ptr->canDbUpdated(_messages);
+
+    for(auto &message : _messages) {
         QList<QStandardItem*> settingsList;
         uint32_t id = message.first.id;
         QString frameID = QString("0x" + QString::number(id, 16));
@@ -148,6 +206,9 @@ void CanSignalDataPrivate::loadDbc(const std::string& filename)
         for(auto &i : settingsList) {
             i->setEditable(false);
         }
+
+        settingsList.append(new QStandardItem(QString::number(message.first.updateCycle)));
+        settingsList.append(new QStandardItem(message.first.initValue.c_str()));
 
         _tvModelSettings.appendRow(settingsList);
 
@@ -172,4 +233,15 @@ void CanSignalDataPrivate::loadDbc(const std::string& filename)
             _tvModel.appendRow(list);
         }
     }
+}
+
+std::pair<CANmessage, std::vector<CANsignal>>* CanSignalDataPrivate::findInDb(uint32_t id)
+{
+    for(auto &msg : _messages) {
+        if(msg.first.id == id) {
+            // TODO: find a better way to do this...
+            return (std::pair<CANmessage, std::vector<CANsignal>>*)&msg;
+        }
+    }
+    return nullptr;
 }
