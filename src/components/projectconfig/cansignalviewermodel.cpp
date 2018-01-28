@@ -29,6 +29,7 @@ CanSignalViewerModel::CanSignalViewerModel()
     _label->setAttribute(Qt::WA_TranslucentBackground);
 
     connect(this, &CanSignalViewerModel::signalReceived, &_component, &CanSignalViewer::signalReceived);
+    connect(this, &CanSignalViewerModel::signalSent, &_component, &CanSignalViewer::signalSent);
 }
 
 QtNodes::NodePainterDelegate* CanSignalViewerModel::painterDelegate() const
@@ -66,7 +67,11 @@ void CanSignalViewerModel::setInData(std::shared_ptr<NodeData> nodeData, PortInd
             auto d = std::dynamic_pointer_cast<CanSignalEncoderSignalIn>(nodeData);
             assert(nullptr != d);
 
-            emit signalReceived(d->name(), d->value());
+            if(d->direction() == Direction::RX) {
+                emit signalReceived(d->name(), d->value());
+            } else {
+                emit signalSent(d->name(), d->value());
+            }
         } else {
             cds_warn("Incorrect nodeData");
         }

@@ -76,6 +76,8 @@ void CanSignalViewer::startSimulation()
     Q_D(CanSignalViewer);
 
     d->_simStarted = true;
+    d->_timer.restart();
+    d->clear();
 }
 
 void CanSignalViewer::signalReceived(const QString& name, const QVariant& val)
@@ -87,10 +89,17 @@ void CanSignalViewer::signalReceived(const QString& name, const QVariant& val)
         return;
     }
 
-    d_ptr->addSignal(nameSplit[0], nameSplit[1], val.toString(), "RX"); 
+    d_ptr->addSignal(nameSplit[0], name.mid(name.indexOf("_") + 1), val.toString(), "RX"); 
 }
 
 void CanSignalViewer::signalSent(const QString& name, const QVariant& val)
 {
+    auto nameSplit = name.split('_');
 
+    if (nameSplit.size() < 2) {
+        cds_error("Wrong signal name: {}", name.toStdString());
+        return;
+    }
+
+    d_ptr->addSignal(nameSplit[0], name.mid(name.indexOf("_") + 1), val.toString(), "TX"); 
 }

@@ -13,6 +13,21 @@ struct CanSignalViewerGuiImpl : public CanSignalViewerGuiInt {
         _ui->setupUi(_widget);
     }
 
+    virtual void setClearCbk(const clear_t& cb) override
+    {
+        QObject::connect(_ui->pbClear, &QPushButton::pressed, cb);
+    }
+
+    virtual void setDockUndockCbk(const dockUndock_t& cb) override
+    {
+        QObject::connect(_ui->pbDockUndock, &QPushButton::toggled, cb);
+    }
+
+    virtual void setFilterCbk(const filter_t& cb) override
+    {
+        QObject::connect(_ui->pbFilter, &QPushButton::toggled, cb);
+    }
+
     virtual QWidget* mainWidget()
     {
         return _widget;
@@ -34,6 +49,12 @@ struct CanSignalViewerGuiImpl : public CanSignalViewerGuiInt {
         //tvModel.setHeaderData(4, Qt::Horizontal, QVariant::fromValue(CRV_ColType::str_type), Qt::UserRole); // value
     }
 
+    virtual void newRowAdded()
+    {
+        if (!_ui->pbLock->isChecked()) {
+            _ui->tv->scrollToBottom();
+        }
+    }
 private:
     Ui::CanSignalViewerPrivate* _ui;
     QWidget* _widget;

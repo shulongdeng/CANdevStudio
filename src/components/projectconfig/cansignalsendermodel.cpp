@@ -55,7 +55,7 @@ NodeDataType CanSignalSenderModel::dataType(PortType portType, PortIndex ndx) co
 
 std::shared_ptr<NodeData> CanSignalSenderModel::outData(PortIndex)
 {
-    return std::make_shared<CanSignalSenderSignalOut>(_sigName, _sigVal);
+    return std::make_shared<CanSignalSenderSignalOut>(_sigName, _sigVal, Direction::TX);
 }
 
 void CanSignalSenderModel::setInData(std::shared_ptr<NodeData> nodeData, PortIndex)

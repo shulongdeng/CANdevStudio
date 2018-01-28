@@ -10,9 +10,10 @@ using CanSignalEncoderDataIn = CanSignalDataDataOut;
 class CanSignalEncoderSignalIn : public NodeData {
 public:
     CanSignalEncoderSignalIn(){};
-    CanSignalEncoderSignalIn(const QString& sigName, const QVariant& value)
+    CanSignalEncoderSignalIn(const QString& sigName, const QVariant& value, const Direction& dir)
         : _sigName(sigName)
         , _value(value)
+        , _dir(dir)
     {
     }
 
@@ -31,9 +32,15 @@ public:
         return _sigName;
     }
 
+    Direction direction() const
+    {
+        return _dir;
+    }
+
 private:
     QString _sigName;
     QVariant _value;
+    Direction _dir;
 };
 
 #endif // CANSIGNALENCODERDATA_H

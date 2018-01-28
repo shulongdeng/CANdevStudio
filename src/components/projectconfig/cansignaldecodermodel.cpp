@@ -59,7 +59,7 @@ NodeDataType CanSignalDecoderModel::dataType(PortType portType, PortIndex ndx) c
 
 std::shared_ptr<NodeData> CanSignalDecoderModel::outData(PortIndex)
 {
-    return std::make_shared<CanSignalDecoderSignalOut>(_name, _value);
+    return std::make_shared<CanSignalDecoderSignalOut>(_name, _value, _dir);
 }
 
 void CanSignalDecoderModel::setInData(std::shared_ptr<NodeData> nodeData, PortIndex)
@@ -74,7 +74,6 @@ void CanSignalDecoderModel::setInData(std::shared_ptr<NodeData> nodeData, PortIn
             auto d = std::dynamic_pointer_cast<CanSignalDecoderRawIn>(nodeData);
             assert(nullptr != d);
 
-            // We are interested in RX frames only!
             if(d->direction() == Direction::RX) {
                 emit frameReceived(d->frame());
             } else if(d->status()) {
@@ -90,6 +89,7 @@ void CanSignalDecoderModel::signalReceived(const QString& name, const QVariant& 
 {
     _name = name;
     _value = value;
+    _dir = Direction::RX;
 
     emit dataUpdated(0);
 }
@@ -98,6 +98,7 @@ void CanSignalDecoderModel::signalSent(const QString& name, const QVariant& valu
 {
     _name = name;
     _value = value;
+    _dir = Direction::TX;
 
     emit dataUpdated(0);
 }

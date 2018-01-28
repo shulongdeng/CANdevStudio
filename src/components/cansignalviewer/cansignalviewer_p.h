@@ -6,6 +6,7 @@
 #include <QtCore/QObject>
 #include <memory>
 #include <QStandardItemModel>
+#include <QElapsedTimer>
 
 class CanSignalViewer;
 
@@ -19,6 +20,7 @@ public:
     QJsonObject getSettings();
     void setSettings(const QJsonObject& json);
     void addSignal(const QString& id, const QString& name, const QString& value, const QString& dir);
+    void clear();
 
 private:
     void initProps();
@@ -32,6 +34,7 @@ public:
     QStandardItemModel _tvModel;
 
 private:
+    QElapsedTimer _timer;
     uint64_t _rowId {1};
     QStringList _columns {"rowId", "Time", "Id", "Dir", "Signal name", "Signal value"};
     CanSignalViewer* q_ptr;

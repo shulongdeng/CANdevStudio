@@ -49,6 +49,7 @@ signals:
 private:
     QString _name;
     QVariant _value;
+    Direction _dir;
     std::unique_ptr<NodePainter> _painter;
 };
 
