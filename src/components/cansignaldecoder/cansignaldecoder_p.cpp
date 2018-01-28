@@ -41,7 +41,7 @@ void CanSignalDecoderPrivate::setSettings(const QJsonObject& json)
     }
 }
 
-void CanSignalDecoderPrivate::decodeFrame(const QCanBusFrame& frame)
+void CanSignalDecoderPrivate::decodeFrame(const QCanBusFrame& frame, bool rxDir)
 {
     auto el = findInDb(frame.frameId());
 
@@ -92,7 +92,11 @@ void CanSignalDecoderPrivate::decodeFrame(const QCanBusFrame& frame)
                 "0x{:03x}{}_{}", frame.frameId(), frame.hasExtendedFrameFormat() ? "x" : "", sig.signal_name)
                                   .c_str();
 
-            emit q_ptr->sendSignal(sigName, sigVal);
+            if(rxDir) {
+                emit q_ptr->signalReceived(sigName, sigVal);
+            } else {
+                emit q_ptr->signalSent(sigName, sigVal);
+            }
 
             cds_info("Signal: {}, val: {}", sigName.toStdString(), sigVal.toDouble());
         }

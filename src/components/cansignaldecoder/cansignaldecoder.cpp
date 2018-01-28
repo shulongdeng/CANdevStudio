@@ -81,11 +81,16 @@ void CanSignalDecoder::startSimulation()
 
 void CanSignalDecoder::frameReceived(const QCanBusFrame& frame)
 {
-    d_ptr->decodeFrame(frame);    
+    d_ptr->decodeFrame(frame, true);    
 }
 
 void CanSignalDecoder::canDbUpdated(const CANmessages_t& messages)
 {
     d_ptr->_messages = messages;
+}
+
+void CanSignalDecoder::frameSent(const QCanBusFrame& frame)
+{
+    d_ptr->decodeFrame(frame, false);    
 }
 

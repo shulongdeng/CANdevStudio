@@ -27,6 +27,8 @@ CanSignalViewerModel::CanSignalViewerModel()
     _label->setAlignment(Qt::AlignVCenter | Qt::AlignHCenter);
     _label->setFixedSize(75, 25);
     _label->setAttribute(Qt::WA_TranslucentBackground);
+
+    connect(this, &CanSignalViewerModel::signalReceived, &_component, &CanSignalViewer::signalReceived);
 }
 
 QtNodes::NodePainterDelegate* CanSignalViewerModel::painterDelegate() const
@@ -59,13 +61,14 @@ std::shared_ptr<NodeData> CanSignalViewerModel::outData(PortIndex)
 
 void CanSignalViewerModel::setInData(std::shared_ptr<NodeData> nodeData, PortIndex)
 {
-    // example
-    // if (nodeData) {
-    //     auto d = std::dynamic_pointer_cast<CanDeviceDataIn>(nodeData);
-    //     assert(nullptr != d);
-    //     emit sendFrame(d->frame());
-    // } else {
-    //     cds_warn("Incorrect nodeData");
-    // }
-    (void) nodeData;
+    if (nodeData) {
+        if (nodeData->sameType(CanSignalViewerSignalIn())) {
+            auto d = std::dynamic_pointer_cast<CanSignalEncoderSignalIn>(nodeData);
+            assert(nullptr != d);
+
+            emit signalReceived(d->name(), d->value());
+        } else {
+            cds_warn("Incorrect nodeData");
+        }
+    }
 }

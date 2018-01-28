@@ -89,6 +89,17 @@ QJsonObject CanSignalDataPrivate::getSettings()
 
     json["msgSettings"] = array;
 
+    for(const auto& msg : _msgSettings) {
+        auto msgDb = findInDb(msg.first);
+        if(msgDb) {
+            msgDb->first.updateCycle = msg.second.first.toUInt();
+            msgDb->first.initValue = msg.second.second.toStdString();
+        }
+    }
+    cds_warn("dupa dupa");
+    // After saving update all listening nodes
+    emit q_ptr->canDbUpdated(_messages);
+
     return json;
 }
 
@@ -135,19 +146,15 @@ void CanSignalDataPrivate::setSettings(const QJsonObject& json)
         cds_info("Rows to restore not found");
     }
 
-    bool dbUpdated = false;
     for(const auto& msg : _msgSettings) {
         auto msgDb = findInDb(msg.first);
         if(msgDb) {
             msgDb->first.updateCycle = msg.second.first.toUInt();
             msgDb->first.initValue = msg.second.second.toStdString();
-            dbUpdated = true;
         }
     }
 
-    if(dbUpdated) {
-        emit q_ptr->canDbUpdated(_messages);
-    }
+    emit q_ptr->canDbUpdated(_messages);
 }
 
 std::string CanSignalDataPrivate::loadFile(const std::string& filename)

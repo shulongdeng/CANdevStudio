@@ -5,6 +5,7 @@
 #include "cansignalviewer.h"
 #include <QtCore/QObject>
 #include <memory>
+#include <QStandardItemModel>
 
 class CanSignalViewer;
 
@@ -17,6 +18,7 @@ public:
     ComponentInterface::ComponentProperties getSupportedProperties() const;
     QJsonObject getSettings();
     void setSettings(const QJsonObject& json);
+    void addSignal(const QString& id, const QString& name, const QString& value, const QString& dir);
 
 private:
     void initProps();
@@ -27,8 +29,11 @@ public:
     CanSignalViewerGuiInt& _ui;
     bool _docked{ true };
     std::map<QString, QVariant> _props;
+    QStandardItemModel _tvModel;
 
 private:
+    uint64_t _rowId {1};
+    QStringList _columns {"rowId", "Time", "Id", "Dir", "Signal name", "Signal value"};
     CanSignalViewer* q_ptr;
     const QString _nameProperty = "name";
     ComponentInterface::ComponentProperties _supportedProps = {

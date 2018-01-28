@@ -36,6 +36,8 @@ signals:
 public slots:
     void stopSimulation() override;
     void startSimulation() override;
+    void signalSent(const QString& name, const QVariant& val);
+    void signalReceived(const QString& name, const QVariant& val);
 
 private:
     QScopedPointer<CanSignalViewerPrivate> d_ptr;

@@ -38,6 +38,7 @@ public:
 public slots:
 
 signals:
+    void signalReceived(const QString& name, const QVariant& val);
 
 private:
     std::unique_ptr<NodePainter> _painter;

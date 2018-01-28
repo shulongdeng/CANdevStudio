@@ -7,6 +7,9 @@ CanSignalViewerPrivate::CanSignalViewerPrivate(CanSignalViewer *q, CanSignalView
     , q_ptr(q)
 {
     initProps();
+
+    _tvModel.setHorizontalHeaderLabels(_columns);
+    _ui.initTableView(_tvModel);
 }
 
 void CanSignalViewerPrivate::initProps()
@@ -39,4 +42,22 @@ void CanSignalViewerPrivate::setSettings(const QJsonObject& json)
         if (json.contains(p.first))
             _props[p.first] = json[p.first].toVariant();
     }
+}
+
+void CanSignalViewerPrivate::addSignal(const QString& id, const QString& name, const QString& value, const QString& dir)
+{
+    QList<QStandardItem*> list;
+
+    list.append(new QStandardItem(QString::number(_rowId++)));
+    list.append(new QStandardItem("0"));
+    list.append(new QStandardItem(id));
+    list.append(new QStandardItem(dir));
+    list.append(new QStandardItem(name));
+    list.append(new QStandardItem(value));
+
+    for(auto &i : list) {
+        i->setEditable(false);
+    }
+
+    _tvModel.appendRow(list);
 }

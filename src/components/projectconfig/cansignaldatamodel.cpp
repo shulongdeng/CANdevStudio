@@ -39,7 +39,7 @@ void CanSignalDataModel::canDbUpdated(const SignalData_t& messages)
 
     _messages = messages;
 
-    for(uint32_t i; i < portCnt; ++i) {
+    for(uint32_t i = 0; i < portCnt; ++i) {
         emit dataUpdated(i); // Data ready on port 0
     } 
 }

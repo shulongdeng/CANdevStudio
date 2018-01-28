@@ -33,13 +33,15 @@ public:
 
 signals:
     void mainWidgetDockToggled(QWidget* widget) override;
-    void sendSignal(const QString& name, const QVariant& value);
+    void signalReceived(const QString& name, const QVariant& value);
+    void signalSent(const QString& name, const QVariant& value);
 
 public slots:
     void stopSimulation() override;
     void startSimulation() override;
     void canDbUpdated(const CANmessages_t& messages);
     void frameReceived(const QCanBusFrame& frame);
+    void frameSent(const QCanBusFrame& frame);
 
 private:
     QScopedPointer<CanSignalDecoderPrivate> d_ptr;

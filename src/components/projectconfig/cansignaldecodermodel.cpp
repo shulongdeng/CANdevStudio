@@ -32,6 +32,9 @@ CanSignalDecoderModel::CanSignalDecoderModel()
 
     connect(this, &CanSignalDecoderModel::canDbUpdated, &_component, &CanSignalDecoder::canDbUpdated);
     connect(this, &CanSignalDecoderModel::frameReceived, &_component, &CanSignalDecoder::frameReceived);
+    connect(this, &CanSignalDecoderModel::frameSent, &_component, &CanSignalDecoder::frameSent);
+    connect(&_component, &CanSignalDecoder::signalReceived, this, &CanSignalDecoderModel::signalReceived);
+    connect(&_component, &CanSignalDecoder::signalSent, this, &CanSignalDecoderModel::signalSent);
 }
 
 QtNodes::NodePainterDelegate* CanSignalDecoderModel::painterDelegate() const
@@ -56,10 +59,7 @@ NodeDataType CanSignalDecoderModel::dataType(PortType portType, PortIndex ndx) c
 
 std::shared_ptr<NodeData> CanSignalDecoderModel::outData(PortIndex)
 {
-    // example
-    // return std::make_shared<CanDeviceDataOut>(_frame, _direction, _status);
-
-    return { };
+    return std::make_shared<CanSignalDecoderSignalOut>(_name, _value);
 }
 
 void CanSignalDecoderModel::setInData(std::shared_ptr<NodeData> nodeData, PortIndex)
@@ -77,9 +77,28 @@ void CanSignalDecoderModel::setInData(std::shared_ptr<NodeData> nodeData, PortIn
             // We are interested in RX frames only!
             if(d->direction() == Direction::RX) {
                 emit frameReceived(d->frame());
+            } else if(d->status()) {
+                emit frameSent(d->frame());
             }
         } else {
             cds_warn("Incorrect nodeData");
         }
     }
 }
+
+void CanSignalDecoderModel::signalReceived(const QString& name, const QVariant& value) 
+{
+    _name = name;
+    _value = value;
+
+    emit dataUpdated(0);
+}
+
+void CanSignalDecoderModel::signalSent(const QString& name, const QVariant& value)
+{
+    _name = name;
+    _value = value;
+
+    emit dataUpdated(0);
+}
+

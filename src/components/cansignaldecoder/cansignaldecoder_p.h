@@ -18,7 +18,7 @@ public:
     ComponentInterface::ComponentProperties getSupportedProperties() const;
     QJsonObject getSettings();
     void setSettings(const QJsonObject& json);
-    void decodeFrame(const QCanBusFrame& frame);
+    void decodeFrame(const QCanBusFrame& frame, bool rxDir);
 
 private:
     void initProps();
