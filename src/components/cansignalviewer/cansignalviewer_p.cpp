@@ -1,6 +1,10 @@
 #include "cansignalviewer_p.h"
 #include <log.h>
 
+namespace {
+    const int32_t rowCountMax = 2000;
+}
+
 CanSignalViewerPrivate::CanSignalViewerPrivate(CanSignalViewer *q, CanSignalViewerCtx&& ctx)
     : _ctx(std::move(ctx))
     , _ui(_ctx.get<CanSignalViewerGuiInt>())
@@ -55,6 +59,10 @@ void CanSignalViewerPrivate::addSignal(const QString& id, const QString& name, c
 {
     QList<QStandardItem*> list;
     QString time = QString::number((_timer.elapsed() / 1000.0), 'f', 2);
+
+    if(rowCountMax < _tvModel.rowCount()) {
+        _tvModel.removeRow(0);
+    }
 
     list.append(new QStandardItem(QString::number(_rowId++)));
     list.append(new QStandardItem(time));
