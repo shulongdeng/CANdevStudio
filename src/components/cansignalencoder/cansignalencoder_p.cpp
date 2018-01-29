@@ -1,8 +1,8 @@
 #include "cansignalencoder_p.h"
-#include <log.h>
 #include <QCanBusFrame>
+#include <log.h>
 
-CanSignalEncoderPrivate::CanSignalEncoderPrivate(CanSignalEncoder *q, CanSignalEncoderCtx&& ctx)
+CanSignalEncoderPrivate::CanSignalEncoderPrivate(CanSignalEncoder* q, CanSignalEncoderCtx&& ctx)
     : _ctx(std::move(ctx))
     , q_ptr(q)
 {
@@ -11,8 +11,7 @@ CanSignalEncoderPrivate::CanSignalEncoderPrivate(CanSignalEncoder *q, CanSignalE
 
 void CanSignalEncoderPrivate::initProps()
 {
-    for (const auto& p: _supportedProps)
-    {
+    for (const auto& p : _supportedProps) {
         _props[p.first];
     }
 }
@@ -58,10 +57,10 @@ const CANmessages_t::value_type* CanSignalEncoderPrivate::findInDb(uint32_t id)
     return nullptr;
 }
 
-void CanSignalEncoderPrivate::signalToRaw(const uint32_t id, const CANsignal& sigDesc, const QVariant& sigVal) 
+void CanSignalEncoderPrivate::signalToRaw(const uint32_t id, const CANsignal& sigDesc, const QVariant& sigVal)
 {
     int64_t rawVal = static_cast<int64_t>((sigVal.toDouble() - sigDesc.offset) / sigDesc.factor);
-    uint8_t *data = (uint8_t*) _rawCache[id].data();
+    uint8_t* data = (uint8_t*)_rawCache[id].data();
 
     if (sigDesc.byteOrder == 0) {
         // little endian
@@ -74,8 +73,8 @@ void CanSignalEncoderPrivate::signalToRaw(const uint32_t id, const CANsignal& si
             bit++;
         }
 
-        if(rawVal < 0) {
-            if(sigDesc.valueSigned) {
+        if (rawVal < 0) {
+            if (sigDesc.valueSigned) {
                 // make sure that MSB is set for signed value
                 bit--;
                 data[bit / 8] |= 1U << (bit % 8);
@@ -85,17 +84,15 @@ void CanSignalEncoderPrivate::signalToRaw(const uint32_t id, const CANsignal& si
         }
     } else {
         // motorola / big endian mode
-        cds_warn("Motorola not implemented yet");
-        //bit = startBit;
-        //for (int bitpos = 0; bitpos < sigSize; bitpos++) {
-            //if (data[bit / 8] & (1 << (bit % 8)))
-                //result += (1ULL << (sigSize - bitpos - 1));
+        auto bit = sigDesc.startBit;
+        for (int bitpos = 0; bitpos < sigDesc.signalSize; bitpos++) {
+            // clear bit first
+            data[bit / 8] &= ~(1U << (bit % 8));
+            // set bit
+            data[bit / 8] |= ((rawVal >> (sigDesc.signalSize - bitpos - 1)) & 1U) << (bit % 8);
 
-            //if ((bit % 8) == 0)
-                //bit += 15;
-            //else
-                //bit--;
-        //}
+            bit++;
+        }
     }
 
     QCanBusFrame frame(id, _rawCache[id]);

@@ -124,13 +124,11 @@ int64_t CanSignalDecoderPrivate::rawToSignal(
     {
         bit = startBit;
         for (int bitpos = 0; bitpos < sigSize; bitpos++) {
-            if (data[bit / 8] & (1 << (bit % 8)))
+            if (data[bit / 8] & (1 << (bit % 8))) {
                 result += (1ULL << (sigSize - bitpos - 1));
+            }
 
-            if ((bit % 8) == 0)
-                bit += 15;
-            else
-                bit--;
+            bit++;
         }
     }
 
