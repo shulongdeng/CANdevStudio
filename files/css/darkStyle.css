@@ -131,7 +131,7 @@ QPushButton#pbStartNew, #pbStartOpen, #close {
     border: 0px;
 }
 
-QWidget#CanRawSenderPrivate, #CanRawViewPrivate {
+QWidget#CanRawSenderPrivate, #CanRawViewPrivate, #CanSignalDataPrivate, #CanSignalSenderPrivate, #CanSignalViewerPrivate{
     background-color: #616161;
 }
 
@@ -139,7 +139,7 @@ QToolButton#toolSwitch {
     image: url(:/images/files/images/light/CANbus_icon_Switch_dark.svg);
 }
 
-QCheckBox#pbRawLayer, QCheckBox#pbDeviceLayer{
+QCheckBox[type="iconSection"] {
     spacing: 43px;
     color: #767676;
     background: #282828;
@@ -149,18 +149,22 @@ QCheckBox#pbRawLayer {
     spacing: 58px;
 }
 
-QCheckBox#pbRawLayer::indicator, QCheckBox#pbDeviceLayer::indicator {
+QCheckBox#pbSignalLayer {
+    spacing: 46px;
+}
+
+QCheckBox[type="iconSection"]::indicator {
     padding-top: 4px;
     width: 16px;
     height: 16px;
     background: #282828;
 }
 
-QCheckBox#pbRawLayer::indicator:checked, #pbDeviceLayer::indicator:checked {
+QCheckBox[type="iconSection"]::indicator:checked {
     image: url(:/images/files/images/dark/Angle-down-01.svg);
 }
 
-QCheckBox#pbRawLayer::indicator:unchecked, #pbDeviceLayer::indicator:unchecked {
+QCheckBox[type="iconSection"]::indicator:unchecked {
     image: url(:/images/files/images/dark/Angle-up-01.svg);
 }
 
@@ -168,7 +172,7 @@ QWidget#startScreen {
     image: url(:/images/files/images/dark/start_screen.png);
 }
 
-QWidget#rawWidget, #deviceWidget {
+QWidget#rawWidget, #deviceWidget, #signalWidget {
     background: #282828;
 }
 
@@ -238,4 +242,8 @@ QCheckBox::indicator:unchecked:disabled {
 
 QCheckBox::indicator:checked:disabled {
     image: url(:/images/files/images/dark/CANbus_icon_CheckBoxOn_disabled.svg);
+}
+
+QLabel[type="IconLabel"] {
+    background: #282828;
 }

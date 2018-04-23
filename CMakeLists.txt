@@ -84,10 +84,12 @@ configure_file(
 include_directories(${CMAKE_BINARY_DIR}/generated)
 # end of version Handling
 
+include_directories(3rdParty/CANdb/src)
 include_directories(3rdParty/readerwriterqueue)
 include_directories(3rdParty/cxxopts/include)
 
 add_subdirectory(3rdParty/nodeeditor)
+add_subdirectory(3rdParty/CANdb)
 add_subdirectory(src/common)
 add_subdirectory(src/gui)
 add_subdirectory(src/components)
