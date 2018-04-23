@@ -43,6 +43,7 @@ public slots:
 signals:
     void canDbUpdated(const CANmessages_t& messages);
     void signalReceived(const QString& name, const QVariant& val);
+    void requestRedraw();
 
 private:
     QCanBusFrame _frame;

@@ -41,6 +41,7 @@ public slots:
 
 signals:
     void canDbUpdated(const CANmessages_t& messages);
+    void requestRedraw();
 
 private:
     std::unique_ptr<NodePainter> _painter;

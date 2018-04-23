@@ -19,7 +19,7 @@ public:
 
     NodeDataType type() const override
     {
-        return NodeDataType{ "SignalEncoder", "Sig"};
+        return NodeDataType{ "SignalEncoder", "SIG"};
     }
 
     QVariant value() const

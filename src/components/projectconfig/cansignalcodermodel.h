@@ -44,6 +44,7 @@ signals:
     void canDbUpdated(const CANmessages_t& messages);
     void frameReceived(const QCanBusFrame& frame);
     void signalReceived(const QString& name, const QVariant& val);
+    void requestRedraw();
 
 private:
     QCanBusFrame _frame;

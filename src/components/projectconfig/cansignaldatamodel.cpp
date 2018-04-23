@@ -20,7 +20,7 @@ QtNodes::NodePainterDelegate* CanSignalDataModel::painterDelegate() const
 
 unsigned int CanSignalDataModel::nPorts(PortType portType) const
 {
-    return (PortType::Out == portType) ? 3 : 0;
+    return (PortType::Out == portType) ? 1 : 0;
 }
 
 NodeDataType CanSignalDataModel::dataType(PortType, PortIndex) const

@@ -16,7 +16,7 @@ public:
 
     NodeDataType type() const override
     {
-        return NodeDataType{ "SignalData", "Data" };
+        return NodeDataType{ "SignalData", "DATA" };
     }
 
     SignalData_t messages() const
