@@ -19,11 +19,12 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/Modules)
 option(WITH_COVERAGE "Build with coverage" OFF)
 option(WITH_TOOLS "Build tools directory" OFF)
 
-if(NOT MSVC)
+if(NOT WIN32)
     option(WITH_TESTS "Build with test" ON)
 else()
     # TODO: MSVC does not like "#define private public" need to find a way to disable it.
     option(WITH_TESTS "Build with test" OFF)
+    set(GUI_TYPE WIN32)
 endif()
 
 set(QT_REQUIRED_VERSION "5.6")
@@ -108,16 +109,39 @@ if(WITH_TOOLS)
     add_subdirectory(tools)
 endif()
 
-install(PROGRAMS ${CMAKE_BINARY_DIR}/lib/libnodes.so
-    DESTINATION lib/CANDevStudio
-)
-
 #Cannelloni is supported on Linux only
 if(UNIX)
     add_subdirectory(3rdParty/qtCannelloniCanBus)
 
     install(PROGRAMS ${CMAKE_BINARY_DIR}/3rdParty/qtCannelloniCanBus/libqtCannelloniCanBusPlugin.so 
         DESTINATION lib/qt/plugins/canbus
+    )
+    install(PROGRAMS ${CMAKE_BINARY_DIR}/lib/libnodes.so
+        DESTINATION lib/CANDevStudio
+    )
+else()
+    set(SYS_LIBS
+        libgcc_s_dw2-1.dll
+        libstdc++-6.dll
+        libwinpthread-1.dll
+        Qt5Core.dll
+        Qt5Gui.dll
+        Qt5Network.dll
+        Qt5SerialBus.dll
+        Qt5SerialPort.dll
+        Qt5Svg.dll
+        Qt5Widgets.dll
+        )
+
+    get_target_property(QtCore_location Qt5::Core LOCATION)
+    get_filename_component(QtPath ${QtCore_location} DIRECTORY)
+
+    foreach(SYS_LIB ${SYS_LIBS})
+        set(SYS_LIBS_ABS ${SYS_LIBS_ABS} ${QtPath}/${SYS_LIB})
+    endforeach()
+
+    install(PROGRAMS ${CMAKE_BINARY_DIR}/bin/libnodes.dll ${SYS_LIBS_ABS}
+        DESTINATION CANDevStudio
     )
 endif()
 
