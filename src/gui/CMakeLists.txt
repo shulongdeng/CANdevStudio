@@ -17,8 +17,4 @@ include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../../3rdParty/rapidjson/includ
 target_link_libraries(CANdevStudio Qt5::Widgets candevice canrawview canrawsender cds-common nodes projectconfig)
 target_compile_definitions(CANdevStudio PRIVATE $<$<CONFIG:Debug>:CDS_DEBUG=true> $<$<NOT:$<CONFIG:Debug>>:CDS_DEBUG=false>)
 
-if(UNIX)
-    install(TARGETS CANdevStudio RUNTIME DESTINATION bin)
-else()
-    install(TARGETS CANdevStudio RUNTIME DESTINATION CANdevStudio)
-endif()
+install(TARGETS CANdevStudio RUNTIME DESTINATION ${INSTALL_DEST_BIN})

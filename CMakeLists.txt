@@ -11,21 +11,37 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 14)
-#libnodes.so will be installed to CANdevStudio dir to not override other installations. Set RPATH accordingly
-SET(CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib/CANDevStudio)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/Modules)
 
 option(WITH_COVERAGE "Build with coverage" OFF)
 option(WITH_TOOLS "Build tools directory" OFF)
 option(DEV_BUILD "Development build will include GIT hash and branch to versioning" ON)
+option(STANDALONE "Builds self containing package including Qt libs" OFF)
 
-if(NOT WIN32)
+if(UNIX)
     option(WITH_TESTS "Build with test" ON)
+
+    if(STANDALONE)
+        set(INSTALL_DEST_LIB CANdevStudio)
+        set(INSTALL_DEST_BIN CANdevStudio)
+        set(INSTALL_DEST_PLUG CANdevStudio)
+        #libnodes.so will be installed to CANdevStudio dir to not override other installations. Set RPATH accordingly
+        set(CMAKE_INSTALL_RPATH $ORIGIN)
+    else()
+        set(INSTALL_DEST_LIB lib/CANdevStudio)
+        set(INSTALL_DEST_BIN bin)
+        set(INSTALL_DEST_PLUG lib/qt/plugins/canbus)
+        #libnodes.so will be installed to CANdevStudio dir to not override other installations. Set RPATH accordingly
+        set(CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib/CANdevStudio)
+    endif()
 else()
     # TODO: MSVC does not like "#define private public" need to find a way to disable it.
     option(WITH_TESTS "Build with test" OFF)
+
     set(GUI_TYPE WIN32)
+    set(INSTALL_DEST_LIB CANdevStudio)
+    set(INSTALL_DEST_BIN CANdevStudio)
 endif()
 
 set(QT_REQUIRED_VERSION "5.6")
@@ -115,24 +131,48 @@ if(UNIX)
     add_subdirectory(3rdParty/qtCannelloniCanBus)
 
     install(PROGRAMS ${CMAKE_BINARY_DIR}/3rdParty/qtCannelloniCanBus/libqtCannelloniCanBusPlugin.so 
-        DESTINATION lib/qt/plugins/canbus
+        DESTINATION ${INSTALL_DEST_PLUG}
     )
-    install(PROGRAMS ${CMAKE_BINARY_DIR}/lib/libnodes.so
-        DESTINATION lib/CANDevStudio
-    )
-else()
-    set(SYS_LIBS
-        libgcc_s_dw2-1.dll
-        libstdc++-6.dll
-        libwinpthread-1.dll
-        Qt5Core.dll
-        Qt5Gui.dll
-        Qt5Network.dll
-        Qt5SerialBus.dll
-        Qt5SerialPort.dll
-        Qt5Svg.dll
-        Qt5Widgets.dll
+endif()
+
+install(PROGRAMS ${CMAKE_BINARY_DIR}/lib/libnodes.so
+    DESTINATION ${INSTALL_DEST_LIB}
+)
+
+if(STANDALONE)
+    if(UNIX)
+        set(SYS_LIBS
+            libQt5Core.so.5
+            libQt5Gui.so.5
+            libQt5Network.so.5
+            libQt5SerialBus.so.5
+            libQt5SerialPort.so.5
+            libQt5Svg.so.5
+            libQt5Widgets.so.5
+            libQt5OpenGL.so.5
+            libQt5Core.so.${Qt5Core_VERSION}
+            libQt5Gui.so.${Qt5Core_VERSION}
+            libQt5Network.so.${Qt5Core_VERSION}
+            libQt5SerialBus.so.${Qt5Core_VERSION}
+            libQt5SerialPort.so.${Qt5Core_VERSION}
+            libQt5Svg.so.${Qt5Core_VERSION}
+            libQt5Widgets.so.${Qt5Core_VERSION}
+            libQt5OpenGL.so.${Qt5Core_VERSION}
         )
+    else()
+        set(SYS_LIBS
+            libgcc_s_dw2-1.dll
+            libstdc++-6.dll
+            libwinpthread-1.dll
+            Qt5Core.dll
+            Qt5Gui.dll
+            Qt5Network.dll
+            Qt5SerialBus.dll
+            Qt5SerialPort.dll
+            Qt5Svg.dll
+            Qt5Widgets.dll
+        )
+    endif()
 
     get_target_property(QtCore_location Qt5::Core LOCATION)
     get_filename_component(QtPath ${QtCore_location} DIRECTORY)
@@ -141,8 +181,8 @@ else()
         set(SYS_LIBS_ABS ${SYS_LIBS_ABS} ${QtPath}/${SYS_LIB})
     endforeach()
 
-    install(PROGRAMS ${CMAKE_BINARY_DIR}/bin/libnodes.dll ${SYS_LIBS_ABS}
-        DESTINATION CANDevStudio
+    install(PROGRAMS ${SYS_LIBS_ABS}
+        DESTINATION ${INSTALL_DEST_LIB}
     )
 endif()
 
