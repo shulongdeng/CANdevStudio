@@ -35,6 +35,7 @@ if(UNIX)
         #libnodes.so will be installed to CANdevStudio dir to not override other installations. Set RPATH accordingly
         set(CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib/CANdevStudio)
     endif()
+    set(LIBNODES_PATH ${CMAKE_BINARY_DIR}/lib/libnodes.so)
 else()
     # TODO: MSVC does not like "#define private public" need to find a way to disable it.
     option(WITH_TESTS "Build with test" OFF)
@@ -42,6 +43,7 @@ else()
     set(GUI_TYPE WIN32)
     set(INSTALL_DEST_LIB CANdevStudio)
     set(INSTALL_DEST_BIN CANdevStudio)
+    set(LIBNODES_PATH ${CMAKE_BINARY_DIR}/bin/libnodes.dll)
 endif()
 
 set(QT_REQUIRED_VERSION "5.6")
@@ -135,7 +137,7 @@ if(UNIX)
     )
 endif()
 
-install(PROGRAMS ${CMAKE_BINARY_DIR}/lib/libnodes.so
+install(PROGRAMS ${LIBNODES_PATH}
     DESTINATION ${INSTALL_DEST_LIB}
 )
 
@@ -186,6 +188,9 @@ if(STANDALONE)
     )
 
     # execute the command "qmake -query QT_INSTALL_PLUGINS" to get the path of plugins dir.
+    if(NOT QT_QMAKE_EXECUTABLE)
+        set(QT_QMAKE_EXECUTABLE qmake)
+    endif()
     execute_process(COMMAND ${QT_QMAKE_EXECUTABLE} -query QT_INSTALL_PLUGINS
         OUTPUT_VARIABLE QT_PLUGINS_DIR
         OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -194,11 +199,12 @@ if(STANDALONE)
     if(QT_PLUGINS_DIR)
         message(STATUS "Qt5 plugin directory: " "${QT_PLUGINS_DIR}")
     else()
-        message(FATAL_ERROR "Qt5 plugin directory cannot be detected.")
+        message(WARNING "Qt5 plugin directory cannot be detected.")
     endif()
 
     file(GLOB CANBUS_PLUGINS
         "${QT_PLUGINS_DIR}/canbus/*.so"
+        "${QT_PLUGINS_DIR}/canbus/*.dll"
     )
 
 install(PROGRAMS ${CANBUS_PLUGINS}
