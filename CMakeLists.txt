@@ -18,6 +18,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/Modules)
 
 option(WITH_COVERAGE "Build with coverage" OFF)
 option(WITH_TOOLS "Build tools directory" OFF)
+option(DEV_BUILD "Development build will include GIT hash and branch to versioning" ON)
 
 if(NOT WIN32)
     option(WITH_TESTS "Build with test" ON)
@@ -58,7 +59,7 @@ set(SPDLOG_BUILD_TESTING CACHE FORCE OFF)
 set(BUILD_EXAMPLES CACHE FORCE OFF)
 
 # Version handling
-if(EXISTS "${CMAKE_SOURCE_DIR}/.git")
+if(EXISTS "${CMAKE_SOURCE_DIR}/.git" AND DEV_BUILD)
   execute_process(
     COMMAND git rev-parse --abbrev-ref HEAD
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
@@ -72,10 +73,10 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/.git")
     OUTPUT_VARIABLE GIT_COMMIT_HASH
     OUTPUT_STRIP_TRAILING_WHITESPACE
   )
-else(EXISTS "${CMAKE_SOURCE_DIR}/.git")
+else()
   set(GIT_BRANCH "")
   set(GIT_COMMIT_HASH "")
-endif(EXISTS "${CMAKE_SOURCE_DIR}/.git")
+endif()
 
 message(STATUS "Git current branch: ${GIT_BRANCH}")
 message(STATUS "Git commit hash: ${GIT_COMMIT_HASH}")
