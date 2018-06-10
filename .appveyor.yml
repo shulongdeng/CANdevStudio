@@ -16,6 +16,8 @@ clone_script:
     git --no-pager log --pretty=oneline -1
 image: Visual Studio 2015
 environment:
+  BINTRAY_API_KEY:
+    secure: yFwC4nMxaexbKIGvEZ71D6K7Oz60swEW7Mc/beDYho1c20j2plbSgA6ZuLPeRGd8
   matrix:
   - GENERATOR: '"Visual Studio 14 2015"'
     BUILD_TYPE: Release
@@ -23,6 +25,7 @@ environment:
   - GENERATOR: '"MinGW Makefiles"'
     BUILD_TYPE: Release
     QT_PATH: C:\Qt\5.9\mingw53_32
+    PACKAGE: 1
   - GENERATOR: '"MinGW Makefiles"'
     BUILD_TYPE: Debug
     QT_PATH: C:\Qt\5.9\mingw53_32
@@ -50,4 +53,14 @@ build_script:
     cmake .. -G %GENERATOR% -DCMAKE_PREFIX_PATH=%QT_PATH% -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
 
     cmake --build . --config %BUILD_TYPE%
+
+    if DEFINED PACKAGE cpack -G ZIP && cmake . -DSTANDALONE=ON && cpack -G ZIP && mkdir ..\master && move *.zip ..\master && cmake . -DDEV_BUILD=OFF && cpack -G ZIP && cmake . -DSTANDALONE=OFF && cpack -G ZIP && mkdir ..\rc && move *.zip ..\rc
+
+    if DEFINED PACKAGE cd ..\master && for /f %f in ('dir /b') do curl -T $f -urkollataj:%BINTRAY_API_KEY% https://api.bintray.com/content/rkollataj/CANdevStudio/cds/master/%f\;override=1
+
+    if DEFINED PACKAGE curl -urkollataj:%BINTRAY_API_KEY% -X POST https://api.bintray.com/content/rkollataj/CANdevStudio/cds/master/publish
+
+    if DEFINED PACKAGE cd ..\rc && for /f %f in ('dir /b') do curl -T $f -urkollataj:%BINTRAY_API_KEY% https://api.bintray.com/content/rkollataj/CANdevStudio/cds/rc/%f\;override=1
+
+    if DEFINED PACKAGE curl -urkollataj:%BINTRAY_API_KEY% -X POST https://api.bintray.com/content/rkollataj/CANdevStudio/cds/rc/publish
 test: off
