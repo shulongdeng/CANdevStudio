@@ -196,6 +196,10 @@ if(STANDALONE)
         message(STATUS "Qt5 plugin directory: " "${QT_PLUGINS_DIR}")
     else()
         message(WARNING "Qt5 plugin directory cannot be detected.")
+        if(WIN32)
+            set(QT_PLUGINS_DIR C:/Qt/5.11.0/mingw53_32/plugins)
+            message(WARNING "Setting to default Appveyor path: ${QT_PLUGINS_DIR}")
+        endif()
     endif()
 
     install(DIRECTORY ${QT_PLUGINS_DIR}/
