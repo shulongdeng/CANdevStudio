@@ -55,9 +55,17 @@ void CanRawLoggerPrivate::logFrame(const QCanBusFrame& frame, const QString& dir
             payHex.insert(ii, ' ');
         }
 
+#ifndef CANOE_LOG_FORMAT
         std::string formatString = " ({sec:03}.{msec:06})  {iface}  {id:03X}   [{dlc}]  {data}\n";
+#else
+        std::string formatString = "{sec:03}.{msec:06} 1  {id:03X}             {iface}   d {dlc} {data}\n";
+#endif
         if (frame.hasExtendedFrameFormat()) {
+#ifndef CANOE_LOG_FORMAT
             formatString = " ({sec:03}.{msec:06})  {iface}  {id:08X}   [{dlc}]  {data}\n";
+#else
+            formatString = "{sec:03}.{msec:06} 1  {id:08X}             {iface}   d {dlc} {data}\n";
+#endif
         }
 
         std::string line = fmt::format(formatString, "sec"_a = nsec / 1000000000, "msec"_a = (nsec % 1000000000) / 1000,

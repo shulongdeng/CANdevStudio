@@ -95,7 +95,11 @@ void CanRawLogger::startSimulation()
         + QString("%1").arg(date.date().day(), 2, 10, QChar('0')) + "_"
         + QString("%1").arg(date.time().hour(), 2, 10, QChar('0'))
         + QString("%1").arg(date.time().minute(), 2, 10, QChar('0'))
+#ifndef CANOE_LOG_FORMAT
         + QString("%1").arg(date.time().second(), 2, 10, QChar('0')) + ".log";
+#else
+        + QString("%1").arg(date.time().second(), 2, 10, QChar('0')) + ".asc";
+#endif
 
     cds_debug("Log filename '{}'", d->_filename.toStdString());
 
@@ -103,7 +107,11 @@ void CanRawLogger::startSimulation()
     QString tmpName = d->_filename;
     while (QFile::exists(tmpName)) {
         cds_warn("Log file '{}' already exists!", tmpName.toStdString());
+#ifndef CANOE_LOG_FORMAT
         tmpName = d->_filename.left(d->_filename.lastIndexOf(".")) + "(" + QString::number(num) + ").log";
+#else
+        tmpName = d->_filename.left(d->_filename.lastIndexOf(".")) + "(" + QString::number(num) + ").asc";
+#endif
         ++num;
     }
 
@@ -114,6 +122,9 @@ void CanRawLogger::startSimulation()
 
     d->_file.setFileName(d->_filename);
     d->_file.open(QIODevice::WriteOnly);
+#ifdef CANOE_LOG_FORMAT
+    d->_file.write("base hex\n");
+#endif
 
     d->_simStarted = true;
     d->_timer.start();
@@ -122,13 +133,21 @@ void CanRawLogger::startSimulation()
 void CanRawLogger::frameReceived(const QCanBusFrame& frame)
 {
     if (d_ptr->_simStarted) {
+#ifndef CANOE_LOG_FORMAT
         d_ptr->logFrame(frame, "RX");
+#else
+        d_ptr->logFrame(frame, "Rx");
+#endif
     }
 }
 
 void CanRawLogger::frameSent(bool status, const QCanBusFrame& frame)
 {
     if (status && d_ptr->_simStarted) {
+#ifndef CANOE_LOG_FORMAT
         d_ptr->logFrame(frame, "TX");
+#else
+        d_ptr->logFrame(frame, "Tx");
+#endif
     }
 }

@@ -19,6 +19,8 @@ option(WITH_TOOLS "Build tools directory" OFF)
 option(DEV_BUILD "Development build will include GIT hash and branch to versioning" ON)
 option(STANDALONE "Builds self containing package including Qt libs" OFF)
 
+add_definitions(-DCANOE_LOG_FORMAT)
+
 if(UNIX)
     option(WITH_TESTS "Build with test" ON)
 
