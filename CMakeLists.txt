@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.0.0)
 project(CANdevStudio CXX)
 
 set(VERSION_MAJOR 0)
-set(VERSION_MINOR 1)
+set(VERSION_MINOR 2)
 set(VERSION_PATCH 0)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -21,20 +21,23 @@ option(STANDALONE "Builds self containing package including Qt libs" OFF)
 
 add_definitions(-DCANOE_LOG_FORMAT)
 
+if(NOT CMAKE_INSTALL_LIBDIR)
+    set(CMAKE_INSTALL_LIBDIR lib)
+endif()
+message(STATUS "CMAKE_INSTALL_LIBDIR: '${CMAKE_INSTALL_LIBDIR}'")
+
 if(UNIX)
     option(WITH_TESTS "Build with test" ON)
-
     if(STANDALONE)
         set(INSTALL_DEST_LIB CANdevStudio)
         set(INSTALL_DEST_BIN CANdevStudio)
         set(INSTALL_DEST_PLUG CANdevStudio/canbus)
     else()
-        set(INSTALL_DEST_LIB lib/CANdevStudio)
+        set(INSTALL_DEST_LIB ${CMAKE_INSTALL_LIBDIR}/CANdevStudio)
         set(INSTALL_DEST_BIN bin)
-        set(INSTALL_DEST_PLUG lib/qt/plugins/canbus)
+        set(INSTALL_DEST_PLUG ${CMAKE_INSTALL_LIBDIR}/qt/plugins/canbus)
     endif()
 else()
-    # TODO: MSVC does not like "#define private public" need to find a way to disable it.
     option(WITH_TESTS "Build with test" OFF)
 
     set(GUI_TYPE WIN32)
@@ -47,6 +50,7 @@ find_package(Qt5Core ${QT_REQUIRED_VERSION} REQUIRED)
 find_package(Qt5SerialBus ${QT_REQUIRED_VERSION} REQUIRED)
 find_package(Qt5Widgets ${QT_REQUIRED_VERSION} REQUIRED)
 find_package(Qt5Test ${QT_REQUIRED_VERSION} REQUIRED)
+find_package(Qt5Svg ${QT_REQUIRED_VERSION} REQUIRED)
 message(STATUS "Qt Version found: ${Qt5Core_VERSION}")
 
 set_property(TARGET Qt5::SerialBus PROPERTY INTERFACE_COMPILE_FEATURES "")
@@ -101,36 +105,20 @@ configure_file(
   ${CMAKE_SOURCE_DIR}/src/common/version.h.in
   ${CMAKE_BINARY_DIR}/generated/version.h
 )
-include_directories(${CMAKE_BINARY_DIR}/generated)
 # end of version Handling
-
-include_directories(3rdParty/readerwriterqueue)
-include_directories(3rdParty/cxxopts/include)
-
-add_subdirectory(3rdParty/nodeeditor)
-add_subdirectory(src/common)
-add_subdirectory(src/gui)
-add_subdirectory(src/components)
 
 if(WITH_TESTS OR WITH_COVERAGE)
     enable_testing()
-    add_subdirectory(3rdParty/fakeit)
-    add_subdirectory(tests)
 endif()
+
+add_subdirectory(3rdParty)
+add_subdirectory(src/common)
+add_subdirectory(src/components)
+add_subdirectory(src/gui)
 
 if(WITH_TOOLS)
     find_package(Boost COMPONENTS system filesystem REQUIRED)
-
     add_subdirectory(tools)
-endif()
-
-#Cannelloni is supported on Linux only
-if(UNIX)
-    add_subdirectory(3rdParty/qtCannelloniCanBus)
-
-    install(PROGRAMS ${CMAKE_BINARY_DIR}/3rdParty/qtCannelloniCanBus/libqtCannelloniCanBusPlugin.so 
-        DESTINATION ${INSTALL_DEST_PLUG}
-    )
 endif()
 
 if(STANDALONE)
@@ -199,7 +187,7 @@ if(STANDALONE)
     else()
         message(WARNING "Qt5 plugin directory cannot be detected.")
         if(WIN32)
-            set(QT_PLUGINS_DIR C:/Qt/5.11.0/mingw53_32/plugins)
+            set(QT_PLUGINS_DIR C:/Qt/${Qt5Core_VERSION}/mingw53_32/plugins)
             message(WARNING "Setting to default Appveyor path: ${QT_PLUGINS_DIR}")
         endif()
     endif()
