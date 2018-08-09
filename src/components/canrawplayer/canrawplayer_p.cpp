@@ -71,14 +71,25 @@ void CanRawPlayerPrivate::loadTraceFile(const QString& filename)
 
     QTextStream in(&traceFile);
 
-    QRegularExpression re(R"(\((\d+\.\d{6})\)\s*\w*\s*([0-9,A-F]{1,8})\s*\[(\d)\]\s*((\s*[0-9,A-F]{2}){0,8}))");
+    QRegularExpression cds_re(R"(\((\d+\.\d{6})\)\s*\w*\s*([0-9,A-F]{1,8})\s*\[(\d)\]\s*((\s*[0-9,A-F]{2}){0,8}).*)");
+    QRegularExpression canoe_re(R"((\d+\.\d{6})\s+1\s+([0-9,A-F]{1,8})[x]*\s+\w+\s+d\s+(\d)\s+((\s*[0-9,A-F]{2}){0,8}))");
     while (!in.atEnd()) {
         QString line = in.readLine();
 
-        const auto& match = re.match(line);
+        const auto& cds_match = cds_re.match(line);
+        const auto& canoe_match = canoe_re.match(line);
+        auto match = cds_match;
+        unsigned int time = 0;
+
+        if (cds_match.hasMatch()) {
+            time = static_cast<unsigned int>(std::stof(match.captured(1).toStdString()) * 1000 + 0.5);
+        } else if (canoe_match.hasMatch()) {
+            match = canoe_match;
+            static unsigned int time_zero = static_cast<unsigned int>(std::stof(match.captured(1).toStdString()) * 1000 + 0.5);
+            time = static_cast<unsigned int>(std::stof(match.captured(1).toStdString()) * 1000 + 0.5) - time_zero;
+        }
 
         if (match.hasMatch()) {
-            unsigned int time = static_cast<unsigned int>(std::stof(match.captured(1).toStdString()) * 1000 + 0.5);
             auto id = std::stoul(match.captured(2).toStdString(), 0, 16);
             auto payload = QByteArray::fromHex(match.captured(4).replace(" ", "").toLatin1());
 
