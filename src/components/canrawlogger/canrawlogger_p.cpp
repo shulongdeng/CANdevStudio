@@ -64,7 +64,7 @@ void CanRawLoggerPrivate::logFrame(const QCanBusFrame& frame, const QString& dir
 #ifndef CANOE_LOG_FORMAT
             formatString = " ({sec:03}.{msec:06})  {iface}  {id:08X}   [{dlc}]  {data}\n";
 #else
-            formatString = "{sec:03}.{msec:06} 1  {id:08X}             {iface}   d {dlc} {data}\n";
+            formatString = "{sec:03}.{msec:06} 1  {id:08X}x            {iface}   d {dlc} {data}\n";
 #endif
         }
 
